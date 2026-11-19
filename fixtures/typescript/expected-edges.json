@@ -1,0 +1,184 @@
+{
+  "mustContainNodes": [
+    { "id": "sym:src/models/base.ts#Entity", "kind": "class" },
+    { "id": "sym:src/models/base.ts#Entity.describe", "kind": "method" },
+    { "id": "sym:src/models/user.ts#User", "kind": "class" },
+    { "id": "sym:src/models/user.ts#User.constructor", "kind": "method" },
+    { "id": "sym:src/models/user.ts#User.create", "kind": "method", "meta": { "isStatic": true } },
+    { "id": "sym:src/models/user.ts#User.save", "kind": "method" },
+    { "id": "sym:src/models/types.ts#Serializable", "kind": "interface" },
+    { "id": "sym:src/lib/strings.ts#helper", "kind": "function", "meta": { "isExported": true } },
+    { "id": "sym:src/lib/strings.ts#shout", "kind": "function", "meta": { "isAsync": true } },
+    { "id": "sym:src/service.ts#register", "kind": "function" },
+    { "id": "sym:src/user.test.ts#testRegister", "kind": "function", "meta": { "isTest": true } },
+    { "id": "sym:src/broken.ts#ok", "kind": "function" },
+    { "id": "ext:npm:lodash", "kind": "external" },
+    { "id": "ext:node:builtins", "kind": "external" }
+  ],
+  "mustContainEdges": [
+    {
+      "src": "sym:src/models/user.ts#User.save",
+      "dst": "sym:src/models/user.ts#User.validate",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/user.ts#User.save",
+      "dst": "sym:src/models/base.ts#Entity.describe",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/base.ts#Entity.describe",
+      "dst": "sym:src/models/base.ts#Entity.format",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/user.ts#User.format",
+      "dst": "sym:src/models/base.ts#Entity.format",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/user.ts#User.constructor",
+      "dst": "sym:src/models/base.ts#Entity.constructor",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/user.ts#User",
+      "dst": "sym:src/models/base.ts#Entity",
+      "kind": "extends",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/user.ts#User",
+      "dst": "sym:src/models/types.ts#Serializable",
+      "kind": "implements",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/service.ts#register",
+      "dst": "sym:src/models/user.ts#User.constructor",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/service.ts#register",
+      "dst": "sym:src/models/user.ts#User.save",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/service.ts#register",
+      "dst": "sym:src/models/user.ts#User.create",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/service.ts#register",
+      "dst": "sym:src/lib/strings.ts#helper",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/user.ts#User.create",
+      "dst": "sym:src/models/user.ts#User.constructor",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/app.ts#main",
+      "dst": "sym:src/service.ts#register",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/app.ts",
+      "dst": "sym:src/service.ts#register",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/ping.ts#ping",
+      "dst": "sym:src/pong.ts#pong",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/pong.ts#pong",
+      "dst": "sym:src/ping.ts#ping",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/user.test.ts#testRegister",
+      "dst": "sym:src/service.ts#register",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/service.ts",
+      "dst": "file:src/models/user.ts",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/service.ts",
+      "dst": "file:src/lib/strings.ts",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/service.ts",
+      "dst": "file:packages/shared/src/index.ts",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/service.ts",
+      "dst": "ext:npm:lodash",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/service.ts",
+      "dst": "ext:node:builtins",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/models/user.ts",
+      "dst": "file:src/models/types.ts",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/index.ts",
+      "dst": "file:src/service.ts",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/ping.ts",
+      "dst": "file:src/pong.ts",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/pong.ts",
+      "dst": "file:src/ping.ts",
+      "kind": "imports",
+      "minConfidence": "exact"
+    }
+  ],
+  "mustNotContainEdges": [
+    { "src": "sym:src/service.ts#register", "dst": "ext:npm:lodash", "kind": "calls" },
+    { "src": "file:src/service.ts", "dst": "ext:npm:lodash", "kind": "calls" },
+    { "src": "sym:src/service.ts#dispatch", "dst": "sym:src/service.ts#register", "kind": "calls" }
+  ],
+  "mustBeUnresolved": [{ "file": "src/service.ts", "name": "handlers[name]", "kind": "call" }],
+  "parseErrorFiles": ["src/broken.ts"],
+  "minResolutionRate": 0.9
+}

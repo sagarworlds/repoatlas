@@ -37,9 +37,10 @@ export interface NodeMeta {
   isStatic?: boolean;
   isAsync?: boolean;
   isExported?: boolean;
-  isTest?: boolean;           // file/symbol detected as test code
+  isTest?: boolean;           // file/symbol detected as test code; a directory holding only test files
+  parseErrors?: number;       // file nodes: count of syntax errors (set by core when > 0)
   isGenerated?: boolean;
-  ecosystem?: string;         // for external: "npm" | "pypi" | "go" | "maven" | "nuget" | "crates" | "composer" | "rubygems"
+  ecosystem?: string;         // for external: "npm" | "node" | "pypi" | "go" | "maven" | "nuget" | "crates" | "composer" | "rubygems"
   loc?: number;               // lines of code (files and symbols)
   [key: string]: unknown;     // plugins may add namespaced keys: "py.decorators", "go.receiver"
 }
@@ -87,7 +88,12 @@ Rules:
   confidence seen.
 - Constructor calls (`new User()`, `User()` in Python) → `calls` edge to the
   constructor method if one exists, else `references` edge to the class.
-- Calls from top-level/module code: `src` is the **file** node.
+- Calls from top-level/module code: `src` is the **file** node. So is code that runs
+  directly in a class body (static property initializers, accessors that are not nodes):
+  a `calls` edge never starts at a class.
+- `new Derived()` where `Derived` has no own constructor: `references` edge to `Derived`
+  (the inherited base constructor is not the target).
+- Core owns `contains` edges; plugin-emitted `contains` edges are dropped.
 - Never emit an edge whose `src` or `dst` is not a node in the same analysis
   (the core validates this; violations are dropped and counted in stats).
 - `name-match` edges are only emitted when the candidate set is small
@@ -106,7 +112,12 @@ Always POSIX paths relative to repo root. Build them only via helpers in `schema
 | file | `file:{path}` | `file:src/app/models.py` |
 | module | `mod:{lang}:{qualified}` | `mod:go:github.com/acme/api/server` |
 | symbol | `sym:{path}#{qualifiedInFile}` | `sym:src/app/models.py#User.save` |
-| external | `ext:{ecosystem}:{package}` | `ext:pypi:requests`, `ext:npm:@scope/pkg` |
+| external | `ext:{ecosystem}:{package}` | `ext:pypi:requests`, `ext:npm:@scope/pkg`, `ext:node:builtins` |
+
+All Node.js built-ins (`fs`, `node:path`, ...) collapse into the single external
+`ext:node:builtins`; the `imports` edge carries `meta.package` / `meta.packages`.
+File and directory nodes exist only for files a plugin claimed (plus non-source files an
+edge points at); see DECISIONS D9.
 
 `qualifiedInFile` = the dotted chain of enclosing class/namespace names *within the
 file*, then the symbol name. Disambiguate collisions (overloads, redefinitions,
@@ -172,7 +183,7 @@ export interface AnalysisStats {
   schemaVersion: number;
   analyzerVersion: string;
   commitSha: string;
-  languages: Record<LanguageId, { files: number; bytes: number; pluginTier: 1 | 2 | 3 }>;
+  languages: Partial<Record<LanguageId, { files: number; bytes: number; pluginTier: 1 | 2 | 3 }>>;
   nodesByKind: Partial<Record<NodeKind, number>>;
   edgesByKind: Partial<Record<EdgeKind, number>>;
   edgesByConfidence: Record<Confidence, number>;
@@ -180,9 +191,15 @@ export interface AnalysisStats {
   skippedFiles: { reason: string; count: number }[];
   parseErrorFiles: number;
   droppedInvalidEdges: number;
+  pluginErrors: { plugin: string; stage: string; message: string }[];  // a plugin failing never fails the analysis
+  truncated?: boolean;                 // node/edge cap hit
   timingsMs: Record<string, number>;   // per pipeline phase
 }
 ```
+
+`references` counts only `calls` (see DECISIONS D17): `resolved` = surviving calls edges,
+`unresolved` = unresolved entries of kind `call`. Skipped-file reasons are short ids
+(`binary`, `lockfile`, `generated-path`, `minified`, `too-large`, `extract-error`, ...).
 
 ## 6. Rollups (aggregated views)
 
@@ -191,4 +208,11 @@ For zoomed-out views the core computes:
   `imports` and symbol-level `calls` between their descendants (excluding internal).
 - `level: "file"` — file→file weights from imports + calls.
 
-Stored in the `rollups` table; served by `GET /graph?level=...`.
+Directory pairs where one directory contains the other are excluded (the root never
+appears). `calls` weights sum `meta.callCount`; `imports` count one per edge.
+
+Each row is emitted once per variant: `includeTests` (true/false; false skips edges that
+touch a test file) x `minConfidence` (only edges at or above it). The default variant (all
+edges) has neither field; the other rows set both (`RollupRow.includeTests`,
+`RollupRow.minConfidence`). Stored in the `rollups` table; served by
+`GET /graph?level=...`, which picks the variant matching `includeTests` / `minConfidence`.

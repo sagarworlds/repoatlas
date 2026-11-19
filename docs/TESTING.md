@@ -50,9 +50,10 @@ exercises:
   "minResolutionRate": 0.8
 }
 ```
+Optional extra keys used by the golden helper (`packages/core/test/golden-assert.ts`):
+`mustContainNodes[].meta` (partial meta match), `mustBeUnresolved`, `parseErrorFiles`.
 Golden tests assert containment (not exact equality) so adding new correct edges does
-not break them. Also snapshot the stats object's counts (`toMatchSnapshot`) to catch
-unexpected large changes; update snapshots deliberately.
+not break them. Snapshotting the stats object's counts (`toMatchSnapshot`) is not done yet.
 
 ## 3. Real-repo smoke runs (manual, not CI)
 

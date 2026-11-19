@@ -108,9 +108,13 @@ Write this as a Node script (`scripts/make-deploy-bundle.ts`), not a shell scrip
   fallback (unknown non-`/api` routes → `index.html`).
 - On startup, analyses left in a non-terminal status (`queued`, `fetching`, `parsing`,
   `resolving`, `persisting`) were interrupted by a restart: re-queue them once, or mark
-  them `failed` if they were already retried.
+  them `failed` if they were already retried. Retry counters are kept in
+  `DATA_DIR/recovery.json` (DECISIONS D13).
 - Graceful shutdown on `SIGINT`/`SIGTERM` and when the parent closes stdin: stop
   accepting jobs, close the DB.
+- Behind IIS/ARR set `TRUST_PROXY=1` (one trusted hop) so rate limits see the client
+  address; never `true`, which would trust a client-supplied `X-Forwarded-For`. Leave it
+  unset if the app is not behind a proxy.
 - Temp extraction directories live under `DATA_DIR/tmp`, never the system temp dir
   (the app pool identity may not have rights there), and are cleaned on startup.
 

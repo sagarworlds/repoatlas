@@ -27,4 +27,13 @@ describe("parseConfig", () => {
   it("rejects invalid numbers", () => {
     expect(() => parseConfig({ PORT: "abc" }, base)).toThrow();
   });
+
+  it("parses TRUST_PROXY as a hop count, loopback or off, and rejects plain true", () => {
+    expect(parseConfig({}, base).trustProxy).toBe(false);
+    expect(parseConfig({ TRUST_PROXY: "0" }, base).trustProxy).toBe(false);
+    expect(parseConfig({ TRUST_PROXY: "1" }, base).trustProxy).toBe(1);
+    expect(parseConfig({ TRUST_PROXY: "loopback" }, base).trustProxy).toBe("loopback");
+    expect(() => parseConfig({ TRUST_PROXY: "true" }, base)).toThrow();
+    expect(() => parseConfig({ TRUST_PROXY: "abc" }, base)).toThrow();
+  });
 });

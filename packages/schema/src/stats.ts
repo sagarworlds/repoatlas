@@ -5,7 +5,8 @@ export const AnalysisStatsSchema = z.object({
   schemaVersion: z.number().int(),
   analyzerVersion: z.string(),
   commitSha: z.string(),
-  languages: z.record(
+  // Partial: only the languages detected in the repository are present.
+  languages: z.partialRecord(
     LanguageIdSchema,
     z.object({
       files: z.number().int(),
@@ -28,10 +29,7 @@ export const AnalysisStatsSchema = z.object({
   truncated: z.boolean().optional(),
   timingsMs: z.record(z.string(), z.number()),
 });
-// `languages` is a partial map in practice (only detected languages are present).
-export type AnalysisStats = Omit<z.infer<typeof AnalysisStatsSchema>, "languages"> & {
-  languages: Partial<z.infer<typeof AnalysisStatsSchema>["languages"]>;
-};
+export type AnalysisStats = z.infer<typeof AnalysisStatsSchema>;
 
 export const ANALYSIS_STATUSES = [
   "queued",
@@ -62,5 +60,12 @@ export const RollupRowSchema = z.object({
   dst: z.string(),
   kind: z.enum(["imports", "calls"]),
   weight: z.number().int().min(1),
+  /**
+   * Which edges the row counts. Omitted = all edges (includeTests true, minConfidence
+   * "name-match"). `includeTests: false` skips edges touching a test file;
+   * `minConfidence` counts only edges at or above that confidence.
+   */
+  includeTests: z.boolean().optional(),
+  minConfidence: ConfidenceSchema.optional(),
 });
 export type RollupRow = z.infer<typeof RollupRowSchema>;

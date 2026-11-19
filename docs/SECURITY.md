@@ -23,6 +23,10 @@ any URL. These rules are mandatory; tests must cover them.
   `^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$` and `^[A-Za-z0-9._-]{1,100}$`.
 - Build GitHub API URLs ourselves from the parsed parts; never fetch a user-supplied URL
   directly (prevents SSRF). Validate `ref` (`^[A-Za-z0-9._/-]{1,200}$`, no `..`).
+- The parser is deliberately strict: `www.github.com`, ports, query strings and fragments
+  are rejected (not stripped), as are `%`, `@`, backslashes, whitespace, control
+  characters and any `..` in a ref. Redirects are followed manually (max 5), only to the
+  API origin or `https://codeload.github.com`; the token is sent only to the API origin.
 - Reject private repos (API `private: true` or 404) and repos whose reported size
   exceeds the limit before downloading.
 
@@ -41,6 +45,11 @@ any URL. These rules are mandatory; tests must cover them.
   characters `< > : " | ? *` or control chars, segments ending in a dot or space, and
   paths whose final absolute length exceeds the OS limit. Apply the same rules on
   every OS so results are identical everywhere.
+- Skip reasons reported: `unsafe-path`, `reserved-name`, `path-too-long`, `symlink`,
+  `hardlink`, `special-file`, `too-large-file`, `case-collision`, `duplicate`,
+  `path-conflict`. Every non-directory entry counts against `MAX_FILES` (including skipped
+  ones); the zip-bomb guard counts gunzipped input bytes; received bytes per file are
+  re-checked against `MAX_FILE_BYTES` (the header size is not trusted).
 - **Case collisions:** if two entries differ only by letter case (`README.md` vs
   `readme.md`), keep the first and skip the rest (case-insensitive filesystems).
 

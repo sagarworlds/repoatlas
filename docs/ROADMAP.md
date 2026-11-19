@@ -26,33 +26,33 @@ web (blank page with app name).
 
 ## M1 — Schema, fetch, pipeline skeleton, TypeScript plugin, store, API
 
-- [ ] `packages/schema`: types + zod schemas from `GRAPH_SCHEMA.md`; ID helpers with
+- [x] `packages/schema`: types + zod schemas from `GRAPH_SCHEMA.md`; ID helpers with
       unit tests (POSIX paths, collision suffix, external IDs incl. scoped npm names).
-- [ ] `packages/plugin-api`: `LanguagePlugin`, `SymbolIndex` types, stoplist, helpers.
-- [ ] `core`: GitHub URL parser/validator (+ security tests).
-- [ ] `core`: `Fetcher` interface; `GitHubFetcher` (ref → SHA, size check, tarball
+- [x] `packages/plugin-api`: `LanguagePlugin`, `SymbolIndex` types, stoplist, helpers.
+- [x] `core`: GitHub URL parser/validator (+ security tests).
+- [x] `core`: `Fetcher` interface; `GitHubFetcher` (ref → SHA, size check, tarball
       download) and `LocalDirFetcher` (tests).
-- [ ] `core`: safe tar extraction (+ malicious tarball tests, SECURITY §7).
-- [ ] `core`: walker + filters (ignored dirs: `.git`, `node_modules`, `vendor`, `dist`,
+- [x] `core`: safe tar extraction (+ malicious tarball tests, SECURITY §7).
+- [x] `core`: walker + filters (ignored dirs: `.git`, `node_modules`, `vendor`, `dist`,
       `build`, `target`, `bin`, `obj`, `__pycache__`, `.venv`, `venv`; binary detection;
       size; minified/generated rules).
-- [ ] `core`: language detection by extension; plugin registry.
-- [ ] `core`: orchestrator running stages 1–11 (ARCHITECTURE §3), progress callbacks,
+- [x] `core`: language detection by extension; plugin registry.
+- [x] `core`: orchestrator running stages 1–11 (ARCHITECTURE §3), progress callbacks,
       per-phase timings, error isolation per file and per plugin, edge validation,
       duplicate edge merging, structure nodes, stats.
-- [ ] `lang-typescript` (Tier 3, TS only for now): program creation from tsconfig with
+- [x] `lang-typescript` (Tier 3, TS only for now): program creation from tsconfig with
       overrides, definitions, imports (internal/external), calls via TypeChecker,
       extends/implements, workspace package mapping.
-- [ ] `fixtures/typescript` + `expected-edges.json`; golden test passing.
-- [ ] `store`: migrations, `GraphStore` interface + SQLite impl, bulk insert in one
+- [x] `fixtures/typescript` + `expected-edges.json`; golden test passing.
+- [x] `store`: migrations, `GraphStore` interface + SQLite impl, bulk insert in one
       transaction, queries: subgraph, node detail, callflow, deps, search (FTS5).
-- [ ] `core`: rollup computation (dir and file level).
-- [ ] `apps/api`: all endpoints in `API.md`, in-process queue, cache by commit SHA,
+- [x] `core`: rollup computation (dir and file level).
+- [x] `apps/api`: all endpoints in `API.md`, in-process queue, cache by commit SHA,
       rate limiting, helmet, CORS, error mapping; API tests with `inject()`.
-- [ ] `apps/cli`: `pnpm analyze <url> [--ref] [--out]` prints stats, optional JSON dump.
-- [ ] Startup recovery: re-queue (once) or fail analyses left mid-run by a restart;
+- [x] `apps/cli`: `pnpm analyze <url> [--ref] [--out]` prints stats, optional JSON dump.
+- [x] Startup recovery: re-queue (once) or fail analyses left mid-run by a restart;
       clean `DATA_DIR/tmp`; graceful shutdown (DEPLOYMENT §6).
-- [ ] Config never depends on `process.cwd()`; port from `HTTP_PLATFORM_PORT` then `PORT`.
+- [x] Config never depends on `process.cwd()`; port from `HTTP_PLATFORM_PORT` then `PORT`.
 
 **Acceptance:** `pnpm analyze https://github.com/sindresorhus/ky` completes, prints
 stats with TS resolution rate ≥ 90%, and the same analysis via `POST /api/analyses`

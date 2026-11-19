@@ -57,8 +57,184 @@ nodes), React Flow (great for small DAGs, weak for large force layouts).
 **Consequences:** Keep rendered graphs ≤ 2,000 nodes via level-of-detail; revisit
 Sigma.js if that becomes limiting.
 
+## D6 — TypeScript 6 is pinned inside `lang-typescript`
+**Context:** The workspace root uses TypeScript 7 (native compiler) for `tsc --noEmit`, but
+TS 7 has no JavaScript compiler API. The TypeScript plugin needs `ts.createProgram` and the
+TypeChecker.
+**Decision:** `packages/lang-typescript` depends on `typescript@6.0.3` (exact JS API); every
+other package type-checks with the root TS 7.
+**Consequences:** Two TypeScript versions in `node_modules`. Revisit when the TS 7 JS API
+(or a stable programmatic API) ships.
+
+## D7 — Stay on `better-sqlite3`, not `node:sqlite`
+**Context:** Node ships an experimental built-in `node:sqlite`.
+**Decision:** Keep `better-sqlite3` (D4). Its bundled SQLite has FTS5 with the trigram
+tokenizer (verified, SQLite 3.54), WAL, and a stable synchronous API with prepared
+statements and transactions.
+**Alternatives:** `node:sqlite` (no native build, but still experimental and FTS5/trigram
+availability depends on the Node build).
+**Consequences:** A native module that needs a prebuilt binary or toolchain on install.
+Every query is synchronous and blocks the event loop, so request work must stay bounded
+(see D20).
+
+## D8 — Tier 3 plugins run whole-project via `analyzeProject(ctx, info)`
+**Context:** The TypeScript plugin needs one `ts.Program` for all files; the per-file
+`extract` + `resolve` split of `LANGUAGE_PLUGINS.md` does not fit.
+**Decision:** `LanguagePlugin.analyzeProject(ctx, info)` is optional and authoritative: when
+present, core takes definitions, imports and edges from it. `info` is the value returned by
+`prepare`. If `analyzeProject` throws, core falls back to per-file `extract` with an empty
+resolution and records a `pluginErrors` entry (stage `analyze`). `RepoView` gained a
+synchronous `readSync` (the TS compiler host is synchronous) and plugin-api ships
+`createDirRepoView(rootDir)`.
+**Consequences:** Plugins read the repository only through `RepoView`; the TS host never
+touches `ts.sys`. TS `extract()` is syntax-only and exists for the fallback path.
+
+## D9 — Structure nodes only for claimed source files
+**Context:** Which files and directories become graph nodes.
+**Decision:** `file` and `directory` nodes are created only for files a plugin claimed and
+that extracted successfully, plus any non-source file an edge points at (for example an
+imported `.json` or `.d.ts`). Directories exist only when a claimed file is below them. The
+root directory node is `dir:` named after the repo. A directory whose files are all tests
+gets `meta.isTest = true` so `includeTests=false` prunes it. Files that failed extraction
+are skipped (`extract-error`, `invalid-extraction`) and get no nodes.
+**Consequences:** READMEs, images and unsupported languages never appear in the map.
+
+## D10 — Node built-ins are one external: `ext:node:builtins`
+**Context:** `fs`, `path`, `node:crypto`... would add dozens of external nodes of no
+interest.
+**Decision:** All Node built-ins collapse into one external node `ext:node:builtins`
+(`ecosystem: "node"`), one `imports` edge per file, with `meta.package` (first specifier)
+and `meta.packages` (all of them).
+**Consequences:** UI shows one "node builtins" box. Other ecosystems keep one node per
+package.
+
+## D11 — Rollups come in variants and use an exclusion rule
+**Context:** `GET /graph?level=dir|file` reads pre-aggregated rollups, but `includeTests`
+and `minConfidence` must still work there.
+**Decision:** A directory pair `(A, B)` is counted only when neither contains the other (so
+the root and ancestor/descendant pairs never appear). Each `(level, src, dst, kind)` is
+stored once per variant: includeTests (true/false) x minConfidence (exact/inferred/
+name-match). The default variant has no variant fields; the others carry `includeTests` and
+`minConfidence` (columns `include_tests`, `min_confidence`, migration 002). Aggregated edges
+are returned with confidence `inferred` (or `exact` when `minConfidence=exact`, since then
+every counted edge is exact).
+**Consequences:** Up to 6x more rollup rows, no query-time edge scans.
+
+## D12 — Source storage layout and retention
+**Decision:** `DATA_DIR/repoatlas.db` (SQLite), `DATA_DIR/sources/{commitSha}/` (extracted
+files, shared by every analysis of that commit), `DATA_DIR/tmp/{analysisId}/` (per-job
+download dir, always removed, wiped on boot), `DATA_DIR/recovery.json` (see D13). A fetch
+extracts into `tmp/` and renames atomically to `sources/{sha}`; if another job won the
+race its directory is used. A second analysis of the same SHA reuses it without
+downloading. Eviction keeps the newest `CACHE_MAX_ANALYSES` finished (done or failed)
+analyses and deletes `sources/{sha}` when no done or in-flight analysis references it; a
+failed analysis does not pin sources, and its sources are removed right after it fails.
+**Consequences:** Failed analyses keep a small row (the error message) until evicted.
+
+## D13 — Startup recovery design
+**Context:** No attempts column in the store.
+**Decision:** Retry counters live in `DATA_DIR/recovery.json` (`{"attempts":{id:n}}`,
+atomic writes; missing or corrupt means no retries spent; entries for analyses that are no
+longer unfinished are dropped each boot). On boot: wipe and recreate `tmp/`; a `queued` row
+is re-queued without spending a retry; a running row (fetching/parsing/resolving/
+persisting) with no prior attempt is reset to `queued` and re-queued once; a running row
+already retried is marked `failed` (`INTERNAL`, "interrupted by a server restart").
+Graceful shutdown aborts running jobs and leaves their rows non-terminal so the next boot
+recovers them; a watchdog forces exit after 8 s.
+
+## D14 — HTTP error status mapping
+**Decision:** Body is always `{error:{code,message}}`. `INVALID_REPO_URL`/`VALIDATION_ERROR`
+400, `REPO_PRIVATE` 403, `*_NOT_FOUND`/`NOT_FOUND` 404, `ANALYSIS_NOT_READY` 409,
+`REPO_TOO_LARGE`/`NO_SUPPORTED_LANGUAGES` 422, `RATE_LIMITED` 429, `INTERNAL`/`CANCELLED`
+500, `TIMEOUT` 504. `REPO_TOO_LARGE` is 422 and not 413 because 413 means the request body
+is too large, not the repository. Internal errors never leak details; they are logged.
+
+## D15 — Search: FTS5 trigram plus bound LIKE
+**Decision:** `nodes_fts` is an FTS5 table with the `trigram` tokenizer, keyed by
+`nodes.rowid`, filled explicitly (no triggers). Queries of 3+ characters are wrapped as one
+quoted FTS5 phrase (operators are inert); 1-2 characters use a bound `LIKE` with escaped
+wildcards. Control characters are stripped in the store and rejected (400) by the API.
+Rank: exact name > prefix > substring, then degree, then name.
+
+## D16 — `TRUST_PROXY` is a hop count, never a boolean
+**Context:** With `trustProxy: true` Fastify takes the leftmost `X-Forwarded-For` entry,
+which a client can forge, defeating the per-IP rate limits.
+**Decision:** `TRUST_PROXY` accepts `false`/`0` (default), `loopback`, or a hop count
+(IIS/ARR: `1`). `true` is rejected at startup. With a hop count only the entry appended by
+our own proxy is believed.
+
+## D17 — Reference statistics rule
+**Decision:** `resolved` = surviving `calls` edges (counting `callCount`) before merging.
+`unresolved` = unresolved entries of kind `call`; unresolved imports are listed in
+`PipelineResult.unresolved` but are not in the rate. For plugins with `analyzeProject`
+`total = resolved + unresolved`. Calls whose callee is typed `any` (unresolvable external
+libraries) are in neither number.
+**Consequences:** The TS rate cannot see calls into libraries; see the known gap about
+calls through unresolved internal imports in `LANGUAGE_PLUGINS.md`.
+
+## D18 — Workspace packages are fed to the TypeScript compiler
+**Context:** Resolving workspace imports only for `imports` edges left cross-package calls
+and `extends` typed `any` and silently dropped.
+**Decision:** `lang-typescript` injects `paths` entries (`name` to the package entry file,
+`name/*` to `src/*` then `*`) into the compiler options, using absolute virtual paths. The
+project's own `paths` win. `resolveWorkspaceImport` remains the fallback for import edges.
+Also: `pathsBasePath` is kept as TypeScript computed it (the config that declared `paths`).
+
+## D19 — Strict URL parsing and tar extraction
+**Decision:** The URL parser rejects `www.github.com`, ports, query strings, fragments (not
+stripped), any `%`, `@`, backslash, whitespace or control character, and any `..` in a ref;
+`.git` is stripped only directly after the repo name. Redirects are followed manually (max
+5) and only to the GitHub API origin or `https://codeload.github.com`; the token is sent
+only to the API origin. The tar extractor streams chunk by chunk, counts every
+non-directory entry against `MAX_FILES`, guards zip bombs by gunzipped input bytes
+(3x `MAX_TARBALL_BYTES`), re-checks received bytes per file, detects case collisions per
+path prefix, and skips: `unsafe-path`, `reserved-name`, `path-too-long`, `symlink`,
+`hardlink`, `special-file`, `too-large-file`, `case-collision`, `duplicate`,
+`path-conflict`.
+
+## D20 — Request work must be bounded (synchronous SQLite)
+**Decision:** `getSubgraph` stops collecting nodes at 4x the node cap (breadth first, so
+shallow nodes win) and reports `truncated: true`. Callflow and deps walks keep one visited
+set per direction (a node reached upward must still be expanded downward) and cap results
+at 500 nodes.
+
+## D21 — Pipeline output is sanitized item by item
+**Decision:** Core owns the containment tree: plugin-emitted `contains` edges are always
+dropped. Every plugin edge, external/module node and unresolved entry is parsed on its own
+with zod; invalid edges count in `droppedInvalidEdges`, invalid nodes or entries add one
+`pluginErrors` entry (stage `validate`). Node and edge caps (500k / 2M) truncate and set
+`stats.truncated`. A failing file is recorded as skipped (`extract-error`) and never fails
+the analysis; TS per-file work is isolated with try/catch and uses iterative AST walkers
+(deeply nested expressions do not overflow the stack).
+
+## D22 — New dependencies (M1)
+`tar` (streaming parser only), `zod`, `better-sqlite3`, `fastify` with `@fastify/helmet`,
+`@fastify/cors`, `@fastify/rate-limit`, `@fastify/static` and `fastify-type-provider-zod`,
+`p-queue` (job concurrency), `ulid` (analysis ids, `an_` prefix), `typescript@6` (plugin
+only, see D6).
+
+## D23 — Source-level workspace packages, no project references (2026-11-20)
+**Context:** ROADMAP M0 asked for tsconfig project references.
+**Decision:** Workspace packages expose `"exports": {".": "./src/index.ts"}` and each package
+has a standalone `tsconfig.json` extending `tsconfig.base.json`; `pnpm typecheck` runs
+`tsc --noEmit` per package. Node code runs via `tsx`, tests via Vitest, web via Vite.
+**Alternatives:** Composite projects with `tsc -b` (needs a build step in the dev loop).
+**Consequences:** No build step in dev. Revisit if typecheck gets slow or if packages must be
+published. How production runs the API (tsx or a bundle) is decided in the M2 deploy task.
+
+## D24 — Tooling versions and config choices (2026-11-20)
+**Decision:** TypeScript 7 at the repo root (typecheck only; lang-typescript pins 6, see D6),
+Vitest 5 (`test.projects` globs), Biome 2 (Markdown excluded: it reformats docs), zod 4,
+Fastify 5, Vite 8, React 19. The config loader uses Node's built-in `process.loadEnvFile`
+(no dotenv); `.env` is resolved from the module location. `.gitattributes` forces LF so Biome
+passes on Windows CI. pnpm needs `allowBuilds` for `esbuild` and `better-sqlite3`.
+
 ---
 
 ## Real-repo smoke results
 | Date | Language | Repo @ sha | Files | Resolution rate | name-match % | Time | Notes |
 |---|---|---|---|---|---|---|---|
+| 2026-11-20 | TypeScript | fixtures/typescript | 12 | 95.2% (20/21) | 0% | 0.5 s | golden fixture |
+| 2026-11-20 | TypeScript | this repo (packages + apps) | ~150 | 99.9% (1615/1617) | 0% | 3.2 s | 48 cross-package calls after D18 |
+| 2026-11-20 | TypeScript | sindresorhus/ky | 98 | 97.6% (1674/1715) | 0% | 4.7 s | before the D18 fix; network run, unauthenticated |
+| 2026-11-20 | TypeScript | sindresorhus/ky @ 3541888 | 98 | 97.6% (1674/1715) | 0% | 7.6 s | lead's final acceptance run (CLI and POST /api/analyses to `done`; graph, deps, search, source verified; traversal gives 404) |

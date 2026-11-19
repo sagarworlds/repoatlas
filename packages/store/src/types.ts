@@ -123,7 +123,7 @@ export interface GraphStore {
   /** Insert nodes, edges, rollups, unresolved for `id` in ONE transaction. */
   saveGraph(id: string, data: GraphData): void;
   deleteAnalysis(id: string): void;
-  /** Ids of the oldest `done` analyses beyond `keep` (for cache eviction). */
+  /** The oldest finished (`done` or `failed`) analyses beyond `keep`, for cache eviction. */
   listEvictable(keep: number): AnalysisRecord[];
 
   getNode(id: string, nodeId: string): GraphNode | undefined;

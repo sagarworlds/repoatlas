@@ -4,7 +4,7 @@
 
 | Language | Package | Tier | Status | Fixture | Notes |
 |---|---|---|---|---|---|
-| TypeScript | lang-typescript | 3 (TS compiler API) | planned (M1) | fixtures/typescript | |
+| TypeScript | lang-typescript | 3 (TS compiler API) | implemented (M1) | fixtures/typescript | `allowJs` off until M4; workspace packages resolved through injected `paths`; TS 6 pinned (DECISIONS D6) |
 | JavaScript | lang-typescript | 3 (`allowJs`) | planned (M4) | fixtures/javascript | CommonJS + ESM |
 | Python | lang-python | 1 (tree-sitter) | planned (M3) | fixtures/python | |
 | Go | lang-go | 1 | planned (M4) | fixtures/go | |
@@ -52,8 +52,12 @@ export interface LanguagePlugin {
     repo: RepoView;                   // file existence checks, read manifests
   }): Promise<ResolutionResult>;
 
-  /** Optional: whole-project mode (Tier 3) doing extract+resolve together. */
-  analyzeProject?(ctx: ProjectContext): Promise<{ extractions: FileExtraction[]; resolution: ResolutionResult }>;
+  /**
+   * Optional: whole-project mode (Tier 3) doing extract+resolve together. When present it
+   * is authoritative; if it throws, core falls back to `extract` per file (no edges).
+   * `info` is what `prepare` returned.
+   */
+  analyzeProject?(ctx: ProjectContext, info: PluginProjectInfo): Promise<{ extractions: FileExtraction[]; resolution: ResolutionResult }>;
 }
 
 export interface RepoFile { path: string; bytes: number; }        // POSIX, repo-relative
@@ -62,11 +66,14 @@ export interface RepoView {
   exists(path: string): boolean;
   isDir(path: string): boolean;
   read(path: string): Promise<string | undefined>;
+  readSync(path: string): string | undefined;   // for synchronous hosts such as the TS compiler
   list(dir: string): string[];
 }
 ```
 
-Plugins are registered in `packages/core/src/plugins/registry.ts`. A plugin that
+`createDirRepoView(rootDir)` (in `plugin-api`) builds a `RepoView` over a directory.
+Plugins are registered in `packages/core/src/plugins/registry.ts` (default set:
+`createDefaultRegistry()`). A plugin that
 throws during `resolve` must not kill the analysis: the core catches, logs, records
 `pluginErrors` in stats, and keeps that plugin's definitions (without edges).
 
@@ -174,12 +181,23 @@ Plugins also produce, per file, a **binding map** `localName → nodeId` used by
 ### TypeScript / JavaScript (Tier 3, `lang-typescript`)
 - Build one `ts.Program` with all `.ts/.tsx/.mts/.cts` (+ `.js/.jsx/.mjs/.cjs` with
   `allowJs`) files. Read the root `tsconfig.json` with `ts.parseJsonConfigFileContent`
-  but override: `noEmit: true`, `skipLibCheck: true`, `allowJs: true`, drop `plugins`,
-  `types`, `typeRoots`. If no tsconfig, use sane defaults. Respect `paths`/`baseUrl`.
+  but override: `noEmit: true`, `skipLibCheck: true`, `allowJs: false` (M1; becomes
+  `true` in M4), `types: []`, drop `plugins`, `typeRoots`, `outDir`, `rootDir`. If no
+  tsconfig, use sane defaults. Respect `paths`/`baseUrl` (`paths` stay relative to the
+  config file that declared them).
 - `node_modules` does not exist (we never install), so bare imports resolve to nothing →
   emit `ext:npm:{package}` (strip subpaths: `lodash/fp` → `lodash`; keep scope `@a/b`).
 - Monorepos: if `pnpm-workspace.yaml` / `package.json#workspaces` exist, map workspace
-  package names to their directories so `@acme/utils` resolves internally.
+  package names to their directories so `@acme/utils` resolves internally. This is done
+  by injecting `paths` entries into the compiler options (so calls, `extends` and type
+  references across packages are resolved by the TypeChecker, not only `imports` edges);
+  `resolveWorkspaceImport` is the fallback for import edges.
+- Node built-ins collapse into `ext:node:builtins` (DECISIONS D10).
+- Calls whose callee is typed `any` (unresolvable externals) produce no edge and are not
+  counted as unresolved. Calls through interface-typed receivers, mixins, decorators and
+  tagged templates produce no edges (known gaps).
+- Robustness: AST walkers are iterative (no stack overflow on deep expressions) and each
+  file's work is isolated with try/catch; one bad file is recorded and skipped.
 - Use the TypeChecker: `getSymbolAtLocation(callExpr.expression)`, follow
   `getAliasedSymbol` for imports, map the declaration back to our node ID. → `exact`.
 - Never call `getPreEmitDiagnostics` (slow, unnecessary). Large repos: if > 5,000 TS
