@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@repoatlas/schema": "workspace:*",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

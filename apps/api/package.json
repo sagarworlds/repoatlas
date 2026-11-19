@@ -9,7 +9,17 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@fastify/cors": "^11.4.3",
+    "@fastify/helmet": "^13.2.0",
+    "@fastify/rate-limit": "^11.2.2",
+    "@fastify/static": "^10.1.11",
+    "@repoatlas/core": "workspace:*",
+    "@repoatlas/schema": "workspace:*",
+    "@repoatlas/store": "workspace:*",
     "fastify": "^5.12.8",
+    "fastify-type-provider-zod": "^7.0.0",
+    "p-queue": "^10.0.0",
+    "ulid": "^3.0.2",
     "zod": "^4.6.7"
   }
 }

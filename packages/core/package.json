@@ -8,5 +8,12 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@repoatlas/lang-typescript": "workspace:*",
+    "@repoatlas/plugin-api": "workspace:*",
+    "@repoatlas/schema": "workspace:*",
+    "tar": "^7.5.23",
+    "zod": "^4.6.7"
   }
 }
