@@ -7,16 +7,16 @@ Each milestone ends with its **acceptance check** — do it before moving on.
 
 ## M0 — Scaffold
 
-- [ ] pnpm workspace with `packages/*`, `apps/*`; `tsconfig.base.json` (strict,
+- [x] pnpm workspace with `packages/*`, `apps/*`; `tsconfig.base.json` (strict,
       `noUncheckedIndexedAccess`, ESM, `moduleResolution: bundler` for web /
       `NodeNext` for node packages); per-package `tsconfig.json` with project references.
-- [ ] Biome config; root scripts `dev`, `test`, `typecheck`, `lint`, `format`, `analyze`.
-- [ ] Vitest workspace config; one trivial test per package so `pnpm test` runs.
-- [ ] Empty packages: `schema`, `plugin-api`, `core`, `treesitter`, `store`,
+- [x] Biome config; root scripts `dev`, `test`, `typecheck`, `lint`, `format`, `analyze`.
+- [x] Vitest workspace config; one trivial test per package so `pnpm test` runs.
+- [x] Empty packages: `schema`, `plugin-api`, `core`, `treesitter`, `store`,
       `lang-typescript`; apps: `api`, `web`, `cli`.
-- [ ] `.env.example` (see ARCHITECTURE §8), config loader with zod in `apps/api`.
-- [ ] GitHub Actions CI (ubuntu + windows): typecheck, lint, test.
-- [ ] `docs/DECISIONS.md` entry for anything you changed from the docs.
+- [x] `.env.example` (see ARCHITECTURE §8), config loader with zod in `apps/api`.
+- [x] GitHub Actions CI (ubuntu + windows): typecheck, lint, test.
+- [x] `docs/DECISIONS.md` entry for anything you changed from the docs.
 
 **Acceptance:** fresh clone → `pnpm install && pnpm typecheck && pnpm lint && pnpm test`
 all green on Linux and Windows CI; `pnpm dev` starts api (`/api/health` responds) and
