@@ -4,6 +4,6 @@ import { defineConfig } from "vitest/config";
 // project in a .NET solution). Per-package vitest.config.ts files are optional.
 export default defineConfig({
   test: {
-    projects: ["packages/*", "apps/*"],
+    projects: ["packages/*", "apps/*", "scripts"],
   },
 });

@@ -229,6 +229,47 @@ Fastify 5, Vite 8, React 19. The config loader uses Node's built-in `process.loa
 (no dotenv); `.env` is resolved from the module location. `.gitattributes` forces LF so Biome
 passes on Windows CI. pnpm needs `allowBuilds` for `esbuild` and `better-sqlite3`.
 
+## D25 — Web stack for M2 (2026-11-21)
+**Decision:** Tailwind CSS v4 (`@tailwindcss/vite`, tokens as CSS variables exposed through `@theme inline`,
+dark mode by a `dark` class on `<html>` set by an external `public/theme-init.js` so helmet's
+`script-src 'self'` still works), React Router 7, TanStack Query 5 (typed hooks in `src/api/hooks.ts`),
+Cytoscape with `fcose` (map) and `dagre` (call flow), Shiki 4.
+**Consequences:** `apps/web` has no `zod` dependency; responses are checked with small hand-written
+guards plus the schema package's own zod schemas for status, progress and stats. Control borders use
+`--line-strong` (3:1 contrast), decorative separators use `--line`.
+
+## D26 — URL is the explorer state (2026-11-21)
+**Decision:** Tab, selection and filters live in the query string, parsed and serialized in
+`explorer/url-state.ts`. Params: `tab` (map|flow|deps), `node`, `file`, `root`, `level`, `kinds`, `conf`,
+`tests`, `ext`, `depth` (map 1-5, deps 1-3; defaults omitted), `up`, `down`, `dir`, `hl` (`path@line`
+call-site highlight). `setParams` replaces history by default; selections push. `applyPatch` clears `file`
+and `hl` whenever `node` changes and the patch does not set them, so a new selection never inherits the
+previous deps centre or call-site highlight. Only a tab change resets `depth` to the tab default.
+
+## D27 — Cytoscape is lazy and hidden behind adapters (2026-11-21)
+**Decision:** `cy-adapter.ts` (map) and `cy-flow-adapter.ts` (flow) dynamic-import Cytoscape and its layouts,
+so the home page loads neither. Graph building, styles and layout options are pure functions tested without a
+canvas. Each Cytoscape instance gets its own host div (map) or an inline `position:absolute;inset:0` (flow);
+Cytoscape injects an unlayered `position: relative` rule that would beat Tailwind's layered classes. Fresh
+layouts are not animated, expansions are. Above 800 nodes fcose runs in draft quality without tiling,
+component packing or label-aware sizing; the 2,000-node cap stays, and a main-thread pause is still possible
+near it (no virtualized tree, no "laying out" status yet).
+
+## D28 — Shiki without innerHTML (2026-11-21)
+**Decision:** `shiki/core` with the JavaScript regex engine (no WASM), github-light/github-dark themes and
+per-language lazy chunks. We use `codeToTokens` and render tokens as React spans, so repository text is never
+injected as HTML. Requests are capped at 2,000 lines and only the first 3,000 lines are highlighted.
+
+## D29 — Deploy bundle and API bundling (2026-11-21)
+**Decision:** `pnpm build` builds the web app, then esbuild bundles `apps/api/src/index.ts` into
+`apps/api/dist/server.js` (everything bundled except `better-sqlite3`, native, and `typescript`, which reads its
+own lib `.d.ts` files). `scripts/make-deploy-bundle.ts` assembles `app\apps\api\dist`, `app\apps\web\dist`,
+`app\node_modules` (those two externals, copied from the workspace install so versions match the lockfile),
+`site\web.config` and a README. `pnpm deploy` was rejected: it changes the layout and brings 97 MB of symlinks.
+In the dist layout `.env` and a relative `DATA_DIR` resolve against the parent of `app\`. Tree-sitter grammars are
+not copied yet (none exist; add in M3). `scripts/verify-bundle.ts` is a manual dry run that starts the bundle from an
+unrelated cwd the way IIS does.
+
 ---
 
 ## Real-repo smoke results

@@ -17,6 +17,15 @@ do not copy another product's branding or assets.
 
 All explorer state that matters (tab, selected node, root, filters) lives in the URL
 query string so links are shareable and back/forward works.
+Parameters (defaults omitted): `tab`, `node`, `file`, `root`, `level`, `kinds`, `conf`, `tests`,
+`ext`, `depth`, `up`, `down`, `dir`, `hl` (`path@line`, a call-site highlight). Changing `node`
+clears `file` and `hl` unless the same change sets them (DECISIONS D26).
+
+Implementation notes (M2): call-flow depth controls offer 0-4; the confidence filter is applied
+client-side because `/callflow` has no confidence parameter; Expand/Focus buttons live in a status
+bar under the map toolbar in addition to double-click; fresh map layouts are not animated; above
+800 nodes the layout is a cheaper draft (a pause is still possible near the 2,000-node cap); the
+code panel loads at most 2,000 lines per request.
 
 ## Home
 

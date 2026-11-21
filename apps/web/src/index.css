@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+/* Dark mode is controlled by a class on <html> (set by the theme toggle), not only by the OS. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens. Light values here, dark overrides below. */
+:root {
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+  --surface-2: #eef0ea;
+  --line: #d8dcd2;
+  /* Borders of controls (inputs, selects, buttons) need 3:1 against the surface (WCAG 1.4.11). */
+  --line-strong: #7d8a83;
+  --fg: #1b2420;
+  --muted: #5a665f;
+  --accent: #0f766e;
+  --accent-strong: #0b5a54;
+  --accent-fg: #ffffff;
+  --accent-soft: #d9efe9;
+  --danger: #b42318;
+  --danger-soft: #fde8e6;
+  --warn: #92560a;
+  --warn-soft: #fcefd2;
+  --ok: #1f7a3d;
+  color-scheme: light;
+}
+
+:root.dark {
+  --bg: #0f1513;
+  --surface: #161d1a;
+  --surface-2: #1e2723;
+  --line: #2f3b36;
+  --line-strong: #6b7a73;
+  --fg: #e8eee9;
+  --muted: #9aa8a0;
+  --accent: #3fc1b0;
+  --accent-strong: #6fd8c9;
+  --accent-fg: #07211d;
+  --accent-soft: #163a34;
+  --danger: #ff8a7e;
+  --danger-soft: #3a1b18;
+  --warn: #f0b862;
+  --warn-soft: #3a2c12;
+  --ok: #6fd08c;
+  color-scheme: dark;
+}
+
+/* Expose the tokens as Tailwind utilities: bg-surface, text-muted, border-line, ... */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-ok: var(--ok);
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+}
+
+/* One visible focus ring for every interactive element. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

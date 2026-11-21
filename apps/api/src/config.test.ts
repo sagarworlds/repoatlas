@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseConfig } from "./config.ts";
+import { parseConfig, resolveLayout } from "./config.ts";
 
 const base = path.resolve("/base");
 
@@ -35,5 +35,27 @@ describe("parseConfig", () => {
     expect(parseConfig({ TRUST_PROXY: "loopback" }, base).trustProxy).toBe("loopback");
     expect(() => parseConfig({ TRUST_PROXY: "true" }, base)).toThrow();
     expect(() => parseConfig({ TRUST_PROXY: "abc" }, base)).toThrow();
+  });
+});
+
+describe("resolveLayout", () => {
+  it("uses the repo root in dev (src layout)", () => {
+    const l = resolveLayout(path.resolve("/repo/apps/api/src"));
+    expect(l.appRoot).toBe(path.resolve("/repo"));
+    expect(l.baseDir).toBe(path.resolve("/repo"));
+  });
+
+  it("puts .env/data one level above app in the bundle (dist layout)", () => {
+    const l = resolveLayout(path.resolve("/srv/atlas/app/apps/api/dist"));
+    expect(l.appRoot).toBe(path.resolve("/srv/atlas/app"));
+    expect(l.baseDir).toBe(path.resolve("/srv/atlas"));
+  });
+
+  it("resolves the web dist from webRoot and DATA_DIR from baseDir", () => {
+    const c = parseConfig({}, path.resolve("/srv/atlas"), path.resolve("/srv/atlas/app"));
+    expect(c.webDistDir).toBe(path.resolve("/srv/atlas/app/apps/web/dist"));
+    expect(c.dataDir).toBe(path.resolve("/srv/atlas/data"));
+    const c2 = parseConfig({ WEB_DIST_DIR: "web" }, path.resolve("/srv/atlas"), path.resolve("/x"));
+    expect(c2.webDistDir).toBe(path.resolve("/srv/atlas/web"));
   });
 });

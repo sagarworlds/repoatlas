@@ -63,20 +63,20 @@ sensible data.
 
 ## M2 — Frontend explorer
 
-- [ ] App shell, routing, theme (light/dark), API client + TanStack Query hooks, typed
+- [x] App shell, routing, theme (light/dark), API client + TanStack Query hooks, typed
       with `schema` types.
-- [ ] Home page: form with validation, examples, recent (localStorage + API).
-- [ ] Progress view with polling and failure state.
-- [ ] Explorer layout: header, file tree, canvas, detail panel, code panel (resizable).
-- [ ] Map tab: compound dir nodes, expand/focus, breadcrumb, toolbar filters, hover
+- [x] Home page: form with validation, examples, recent (localStorage + API).
+- [x] Progress view with polling and failure state.
+- [x] Explorer layout: header, file tree, canvas, detail panel, code panel (resizable).
+- [x] Map tab: compound dir nodes, expand/focus, breadcrumb, toolbar filters, hover
       highlight, sizing by degree, confidence styling, PNG export.
-- [ ] Call flow tab: dagre LR layout, depth controls, re-focus with history, edge →
+- [x] Call flow tab: dagre LR layout, depth controls, re-focus with history, edge →
       call-site line in code panel.
-- [ ] Dependencies tab: three-column view, depth control, externals grouped.
-- [ ] Detail panel and code panel (Shiki, lazy languages, GitHub link, copy, fullscreen).
-- [ ] Search (Ctrl/Cmd+K, `/`).
-- [ ] URL-driven state; empty/loading/error states; responsive drawers < 900px.
-- [ ] Production build: API serves `apps/web/dist` with SPA fallback.
+- [x] Dependencies tab: three-column view, depth control, externals grouped.
+- [x] Detail panel and code panel (Shiki, lazy languages, GitHub link, copy, fullscreen).
+- [x] Search (Ctrl/Cmd+K, `/`).
+- [x] URL-driven state; empty/loading/error states; responsive drawers < 900px.
+- [x] Production build: API serves `apps/web/dist` with SPA fallback.
 - [ ] `scripts/make-deploy-bundle.ts` and a dry-run deployment following
       `docs/DEPLOYMENT.md` (web.config, app pool, permissions) on the Windows server.
 

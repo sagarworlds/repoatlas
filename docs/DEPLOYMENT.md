@@ -94,10 +94,12 @@ single file, so two Node processes must never run at the same time during a recy
 
 1. On a **Windows x64** machine with the **same Node major version** as the server
    (so `better-sqlite3`'s native binary matches): `pnpm install`, `pnpm build`.
-2. `pnpm --filter @repoatlas/api deploy --prod <out>\app` to produce a self-contained
-   folder with production `node_modules`.
-3. Copy the web build (`apps/web/dist`) and the tree-sitter grammar `.wasm` files into
-   the bundle at the paths the API expects (the build script should do this).
+2. `pnpm bundle -- --out <out> [--root C:\NodeApps\repoatlas]` builds the web app and the
+   bundled API (`apps/api/dist/server.js`), then assembles `<out>\app` (API, web dist and
+   production `node_modules` for `better-sqlite3` and `typescript`) plus `<out>\site\web.config`
+   (DECISIONS D29; `pnpm deploy` is not used).
+3. Tree-sitter grammar `.wasm` files are not bundled yet (no grammars exist before M3);
+   the script must copy them once they do.
 4. Copy `<out>\app` to `C:\NodeApps\repoatlas\app`, then recycle the app pool.
 
 Write this as a Node script (`scripts/make-deploy-bundle.ts`), not a shell script.

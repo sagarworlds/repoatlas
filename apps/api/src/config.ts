@@ -4,10 +4,28 @@ import { fileURLToPath } from "node:url";
 import type { Limits } from "@repoatlas/core";
 import { z } from "zod";
 
+export interface Layout {
+  /** Directory that contains apps/web/dist (the repo root in dev, the bundle's app\ folder in prod). */
+  appRoot: string;
+  /** Directory holding .env and where a relative DATA_DIR resolves. */
+  baseDir: string;
+}
+
+/**
+ * Works out the folder layout from the directory of the running module (never cwd).
+ *  - dev  : <repo>/apps/api/src/config.ts  -> appRoot = baseDir = <repo>
+ *  - prod : <root>/app/apps/api/dist/server.js -> appRoot = <root>/app, baseDir = <root>
+ *           (so .env and data sit outside the replaceable app folder, see DEPLOYMENT.md)
+ */
+export function resolveLayout(moduleDir: string): Layout {
+  const appRoot = path.resolve(moduleDir, "..", "..", "..");
+  const isBundle = path.basename(moduleDir) === "dist";
+  return { appRoot, baseDir: isBundle ? path.resolve(appRoot, "..") : appRoot };
+}
+
 // Directory of this module. Never use process.cwd() (see docs/DEPLOYMENT.md).
-const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-/** Repo root in dev (apps/api/src -> ../../..). */
-export const appRoot = path.resolve(moduleDir, "..", "..", "..");
+const layout = resolveLayout(path.dirname(fileURLToPath(import.meta.url)));
+export const appRoot = layout.appRoot;
 
 // z.coerce.number() converts the env string to a number (env vars are always strings).
 const intFromEnv = (def: number) => z.coerce.number().int().positive().default(def);
@@ -81,7 +99,11 @@ export interface Config {
 }
 
 /** Pure function: validates an env-like object. Easy to unit test. */
-export function parseConfig(env: Record<string, string | undefined>, baseDir: string): Config {
+export function parseConfig(
+  env: Record<string, string | undefined>,
+  baseDir: string,
+  webRoot: string = baseDir,
+): Config {
   // Empty strings (e.g. "GITHUB_TOKEN=" in .env) count as unset.
   const cleaned: Record<string, string | undefined> = {};
   for (const [key, value] of Object.entries(env)) {
@@ -110,7 +132,10 @@ export function parseConfig(env: Record<string, string | undefined>, baseDir: st
       generalMax: raw.RATE_LIMIT_GENERAL_MAX,
       generalWindowMs: raw.RATE_LIMIT_GENERAL_WINDOW_MS,
     },
-    webDistDir: path.resolve(baseDir, raw.WEB_DIST_DIR ?? path.join("apps", "web", "dist")),
+    webDistDir: path.resolve(
+      raw.WEB_DIST_DIR === undefined ? webRoot : baseDir,
+      raw.WEB_DIST_DIR ?? path.join("apps", "web", "dist"),
+    ),
     exitOnStdinClose:
       raw.EXIT_ON_STDIN_CLOSE === undefined
         ? behindIis
@@ -120,11 +145,11 @@ export function parseConfig(env: Record<string, string | undefined>, baseDir: st
 
 /** Loads `.env` from a path relative to this file (not cwd), then parses process.env. */
 export function loadConfig(): Config {
-  const envFile = path.join(appRoot, ".env");
+  const envFile = path.join(layout.baseDir, ".env");
   if (existsSync(envFile)) {
     process.loadEnvFile(envFile); // built into Node 22; does not override existing vars
   }
-  return parseConfig(process.env, appRoot);
+  return parseConfig(process.env, layout.baseDir, layout.appRoot);
 }
 
 /** The resource limits handed to the analysis pipeline. */
