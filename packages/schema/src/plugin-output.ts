@@ -38,6 +38,12 @@ export const RawReferenceSchema = z.object({
   receiver: z.string().optional(),
   receiverKind: z.enum(["self", "super", "identifier", "member-chain", "call", "other"]).optional(),
   argCount: z.number().int().min(0).optional(),
+  /**
+   * Type name the receiver obviously has, inferred at extraction time from a same-function
+   * assignment or annotation (`u = User()` / `u: User` then `u.save()` gives "User").
+   * The resolver looks this name up like any other identifier. Absent when unknown.
+   */
+  receiverTypeHint: z.string().optional(),
 });
 export type RawReference = z.infer<typeof RawReferenceSchema>;
 

@@ -339,6 +339,21 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
 
+  packages/lang-python:
+    dependencies:
+      '@repoatlas/plugin-api':
+        specifier: workspace:*
+        version: link:../plugin-api
+      '@repoatlas/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@repoatlas/treesitter':
+        specifier: workspace:*
+        version: link:../treesitter
+      tree-sitter-python:
+        specifier: 0.25.0
+        version: 0.25.0
+
   packages/lang-typescript:
     dependencies:
       '@repoatlas/plugin-api':
@@ -383,7 +398,21 @@ importers:
         specifier: ^9.6.0
         version: 9.6.0
 
-  packages/treesitter: {}
+  packages/treesitter:
+    dependencies:
+      '@repoatlas/plugin-api':
+        specifier: workspace:*
+        version: link:../plugin-api
+      '@repoatlas/schema':
+        specifier: workspace:*
+        version: link:../schema
+      web-tree-sitter:
+        specifier: 0.27.2
+        version: 0.27.2
+    devDependencies:
+      tree-sitter-python:
+        specifier: 0.25.0
+        version: 0.25.0
 
 packages:
 
@@ -1659,6 +1688,10 @@ packages:
     resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
     engines: {node: ^18 || ^20 || >= 21}
 
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
+
   obug@3.0.0:
     resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
@@ -1907,6 +1940,14 @@ packages:
     resolution: {integrity: sha512-BcDSDW+SIGWVOns1Zm6Yg91q9AEj7eaID0QDY9oIqJD1A8dscNwMcl9Sms2DeuWCNov1X0/oXanHGYQBSLwZsg==}
     engines: {node: ^22.14.0 || >=24.0.0}
 
+  tree-sitter-python@0.25.0:
+    resolution: {integrity: sha512-eCmJx6zQa35GxaCtQD+wXHOhYqBxEL+bp71W/s3fcDMu06MrtzkVXR437dRrCrbrDbyLuUDJpAgycs7ncngLXw==}
+    peerDependencies:
+      tree-sitter: ^0.25.0
+    peerDependenciesMeta:
+      tree-sitter:
+        optional: true
+
   trim-lines@3.0.1:
     resolution: {integrity: sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg==}
 
@@ -2047,6 +2088,9 @@ packages:
   w3c-xmlserializer@6.0.0:
     resolution: {integrity: sha512-4Nsy8K5Tr6SPDH9jhKJOHf7ChDrc1zufZTVSF7x72hwuEXBqxqk9G6cK+K2NRUtB3iELRJqjXb4JPDMBjMTl2Q==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
+
+  web-tree-sitter@0.27.2:
+    resolution: {integrity: sha512-ZRo86GKI4aOSBAqOrPmCtriExI3xIzu1sNw/V6v3b4QGxrEmO19FGwbMNdyhw3MJLAZIw0xAV0oSpqX361eAyQ==}
 
   webidl-conversions@8.0.1:
     resolution: {integrity: sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ==}
@@ -3138,6 +3182,8 @@ snapshots:
 
   node-addon-api@8.9.2: {}
 
+  node-gyp-build@4.8.4: {}
+
   obug@3.0.0: {}
 
   on-exit-leak-free@2.1.2: {}
@@ -3380,6 +3426,11 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
+  tree-sitter-python@0.25.0:
+    dependencies:
+      node-addon-api: 8.9.2
+      node-gyp-build: 4.8.4
+
   trim-lines@3.0.1: {}
 
   tslib@2.9.1:
@@ -3495,6 +3546,8 @@ snapshots:
   w3c-xmlserializer@6.0.0:
     dependencies:
       xml-name-validator: 5.0.0
+
+  web-tree-sitter@0.27.2: {}
 
   webidl-conversions@8.0.1: {}
 

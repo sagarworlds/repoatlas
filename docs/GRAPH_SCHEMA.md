@@ -165,6 +165,7 @@ export interface RawReference {
   receiver?: string;               // text of receiver expression if any: "self", "this", "user", "np", "pkg.sub"
   receiverKind?: "self" | "super" | "identifier" | "member-chain" | "call" | "other";
   argCount?: number;
+  receiverTypeHint?: string;       // type name the receiver obviously has (`u = User()` / `u: User` -> "User"), inferred at extraction time, same function only
 }
 
 export interface ResolutionResult {
