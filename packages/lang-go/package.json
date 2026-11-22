@@ -1,0 +1,18 @@
+{
+  "name": "@repoatlas/lang-go",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@repoatlas/plugin-api": "workspace:*",
+    "@repoatlas/schema": "workspace:*",
+    "@repoatlas/treesitter": "workspace:*",
+    "tree-sitter-go": "0.25.0"
+  }
+}
