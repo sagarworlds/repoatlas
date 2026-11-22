@@ -89,18 +89,18 @@ when deployed on IIS, including after an app pool recycle.
 
 ## M3 — Tree-sitter engine + Python
 
-- [ ] `packages/treesitter`: `web-tree-sitter` init, grammar loading (pinned versions,
+- [x] `packages/treesitter`: `web-tree-sitter` init, grammar loading (pinned versions,
       "all grammars load" test), query runner, definition tree building, reference →
       enclosing definition attachment, per-file timeout.
-- [ ] Generic resolver helpers in `plugin-api` implementing LANGUAGE_PLUGINS §5 steps
+- [x] Generic resolver helpers in `plugin-api` implementing LANGUAGE_PLUGINS §5 steps
       as composable functions (self/super lookup, binding-map lookup, same-module lookup,
       local-variable type inference, name-match with stoplist).
-- [ ] `lang-python`: spec + queries, `prepare` (package roots from layout/pyproject),
+- [x] `lang-python`: spec + queries, `prepare` (package roots from layout/pyproject),
       import resolution (absolute, relative, aliased, wildcard, `__init__` re-export),
       method/self handling, decorators, `__init__` constructor calls, test detection.
-- [ ] `fixtures/python` + golden test.
-- [ ] Polyglot check: fixture with TS + Python in one repo produces one coherent graph.
-- [ ] UI: low-resolution banner, language chips reflect stats.
+- [x] `fixtures/python` + golden test.
+- [x] Polyglot check: fixture with TS + Python in one repo produces one coherent graph.
+- [x] UI: low-resolution banner, language chips reflect stats.
 
 **Acceptance:** analyze 2 real Python repos (< 300 files); resolution rate ≥ 65%;
 `name-match` share < 20%; record results in `DECISIONS.md`.

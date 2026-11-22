@@ -55,6 +55,10 @@ Optional extra keys used by the golden helper (`packages/core/test/golden-assert
 Golden tests assert containment (not exact equality) so adding new correct edges does
 not break them. Snapshotting the stats object's counts (`toMatchSnapshot`) is not done yet.
 
+Golden tests for Python and the polyglot fixture live in `packages/core/test/python-golden.test.ts`
+(`lang-python` does not depend on `core`). `ExpectedGraph` also accepts `expectLanguages` and
+`noCrossLanguageEdges`. Engine and extractor tests need the real WASM grammar; they run offline.
+
 ## 3. Real-repo smoke runs (manual, not CI)
 
 `pnpm analyze https://github.com/<owner>/<repo>` prints stats. Keep a list in
@@ -63,7 +67,9 @@ timing and notable failures. Suggested small repos: one per language, < 300 file
 
 ## 4. Quality metrics to watch
 
-- **Resolution rate** = resolved / total references (per language). Targets for v1:
+- **Resolution rate** = resolved / total references (per language), where total =
+  resolved + unresolved internal-resolvable references; externals, builtins and calls through
+  parameters are excluded (DECISIONS D32). Targets for v1:
   TS ≥ 90%, Go/Java/C# ≥ 75%, Python/PHP/Rust ≥ 65%, Ruby/C++ ≥ 50%.
 - **Confidence mix**: share of `name-match` edges should be < 20% outside Ruby/C++.
 - **Dropped invalid edges** must be 0 in fixtures (it indicates an ID bug).

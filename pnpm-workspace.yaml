@@ -4,4 +4,4 @@ packages:
 allowBuilds:
   esbuild: true
   better-sqlite3: true
-  tree-sitter-python: false   # native node-gyp build is not needed; we only use the bundled .wasm
+  tree-sitter-python: false # native node-gyp build is not needed; we only use the bundled .wasm

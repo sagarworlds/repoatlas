@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseConfig, resolveLayout } from "./config.ts";
+import { applyGrammarDefaults, parseConfig, resolveLayout } from "./config.ts";
 
 const base = path.resolve("/base");
 
@@ -57,5 +57,30 @@ describe("resolveLayout", () => {
     expect(c.dataDir).toBe(path.resolve("/srv/atlas/data"));
     const c2 = parseConfig({ WEB_DIST_DIR: "web" }, path.resolve("/srv/atlas"), path.resolve("/x"));
     expect(c2.webDistDir).toBe(path.resolve("/srv/atlas/web"));
+  });
+});
+
+describe("applyGrammarDefaults", () => {
+  const root = path.resolve("/srv/atlas/app");
+  const dir = path.join(root, "grammars");
+
+  it("sets both variables when unset and the folder exists", () => {
+    const env: Record<string, string | undefined> = { TREE_SITTER_WASM_DIR: "" };
+    const set = applyGrammarDefaults(env, root, () => true);
+    expect(set).toEqual(["GRAMMAR_DIR", "TREE_SITTER_WASM_DIR"]);
+    expect(env.GRAMMAR_DIR).toBe(dir);
+    expect(env.TREE_SITTER_WASM_DIR).toBe(dir);
+  });
+
+  it("keeps explicit values", () => {
+    const env: Record<string, string | undefined> = { GRAMMAR_DIR: "/custom" };
+    expect(applyGrammarDefaults(env, root, () => true)).toEqual(["TREE_SITTER_WASM_DIR"]);
+    expect(env.GRAMMAR_DIR).toBe("/custom");
+  });
+
+  it("does nothing when the folder is missing (dev)", () => {
+    const env: Record<string, string | undefined> = {};
+    expect(applyGrammarDefaults(env, root, () => false)).toEqual([]);
+    expect(env).toEqual({});
   });
 });

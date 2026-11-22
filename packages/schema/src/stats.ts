@@ -12,6 +12,8 @@ export const AnalysisStatsSchema = z.object({
       files: z.number().int(),
       bytes: z.number().int(),
       pluginTier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+      // Optional so analyses stored before this field existed still validate.
+      references: z.object({ total: z.number().int(), resolved: z.number().int() }).optional(),
     }),
   ),
   nodesByKind: z.partialRecord(NodeKindSchema, z.number().int()),

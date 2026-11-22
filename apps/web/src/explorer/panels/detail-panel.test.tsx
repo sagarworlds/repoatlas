@@ -74,7 +74,14 @@ describe("DetailPanel", () => {
         analysisId="an_1"
         analysis={makeAnalysis({
           stats: {
-            languages: { typescript: { files: 12, loc: 900 } },
+            languages: {
+              typescript: {
+                files: 12,
+                bytes: 900,
+                pluginTier: 3,
+                references: { total: 100, resolved: 80 },
+              },
+            },
             nodesByKind: { file: 12, function: 30 },
             references: { total: 100, resolved: 80 },
             parseErrorFiles: 1,
@@ -84,7 +91,9 @@ describe("DetailPanel", () => {
       { route: "/a/an_1", path: "/a/:analysisId" },
     );
     expect(screen.getByText("Nothing selected")).toBeInTheDocument();
-    expect(screen.getByText("typescript")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Languages in this repository" })).toHaveTextContent(
+      "TypeScript · 12 files · Tier 3 · 80% resolved",
+    );
     expect(screen.getByText("80% resolved (80 of 100)")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Edge confidence legend" })).toBeInTheDocument();
   });

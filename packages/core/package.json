@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@repoatlas/lang-python": "workspace:*",
     "@repoatlas/lang-typescript": "workspace:*",
     "@repoatlas/plugin-api": "workspace:*",
     "@repoatlas/schema": "workspace:*",

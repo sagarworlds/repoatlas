@@ -163,7 +163,7 @@ which a client can forge, defeating the per-IP rate limits.
 (IIS/ARR: `1`). `true` is rejected at startup. With a hop count only the entry appended by
 our own proxy is believed.
 
-## D17 — Reference statistics rule
+## D17 — Reference statistics rule (counting rule superseded by D32)
 **Decision:** `resolved` = surviving `calls` edges (counting `callCount`) before merging.
 `unresolved` = unresolved entries of kind `call`; unresolved imports are listed in
 `PipelineResult.unresolved` but are not in the rate. For plugins with `analyzeProject`
@@ -267,8 +267,73 @@ own lib `.d.ts` files). `scripts/make-deploy-bundle.ts` assembles `app\apps\api\
 `app\node_modules` (those two externals, copied from the workspace install so versions match the lockfile),
 `site\web.config` and a README. `pnpm deploy` was rejected: it changes the layout and brings 97 MB of symlinks.
 In the dist layout `.env` and a relative `DATA_DIR` resolve against the parent of `app\`. Tree-sitter grammars are
-not copied yet (none exist; add in M3). `scripts/verify-bundle.ts` is a manual dry run that starts the bundle from an
+copied since M3 (D34). `scripts/verify-bundle.ts` is a manual dry run that starts the bundle from an
 unrelated cwd the way IIS does.
+
+
+## D30 — Grammar wasm from per-language npm packages, pinned with web-tree-sitter 0.27.2 (2026-11-22)
+**Decision:** `web-tree-sitter` 0.27.2 with `tree-sitter-python` 0.25.0 (`tree-sitter-python.wasm` inside the
+package). The `tree-sitter-wasms` bundle was rejected: its files fail to load with 0.27.2 (dylink error).
+Packages are installed only for their wasm (`allowBuilds: false`, no native build). One `Parser` and compiled
+query set per spec is cached in a WeakMap; trees and cursors are always deleted. Parse timeout: the parse
+progress callback returns true after a deadline, and the deadline is also checked after each query stage, during
+receiver inference and after `postProcess`. Queries use `query.matches()`.
+**Consequences:** New languages add their grammar package and a `GRAMMAR_FILES` line (D34). The query-stage cancel
+semantics were not verified; the stage checks are the fallback.
+
+## D31 — receiverTypeHint and extraction-time type inference (2026-11-22)
+**Decision:** `RawReference.receiverTypeHint` (optional) holds the type name the receiver obviously has. The
+engine calls the spec's `inferReceiverType`; resolvers look the hint up like an identifier. Python infers only
+when every binding in scope agrees: `x = Foo()`, `x: Foo`, annotated parameters, `Foo().m()`, `self.x = Foo()`
+(`None` is neutral), pytest fixtures (return type of the `@fixture` in the same file or a `conftest.py` above).
+Bindings are collected once per scope or class in a linear walk (cached per tree); a first version rescanned the
+scope per reference and was quadratic (found in review: 64 KB file took 26 s).
+**Consequences:** Hints are conservative and not flow-sensitive. Return types of calls and attribute types of
+other objects are not followed (`py.returns` is recorded but only used for fixtures).
+
+## D32 — Per-language reference stats and the rate denominator (2026-11-22)
+**Decision (supersedes the counting part of D17):** `total = resolved + unresolved` for every plugin tier, split
+per language in `stats.languages[lang].references` (optional, so old analyses validate); the top-level number is
+the sum. Calls into externals, builtins and builtin-type methods (stoplist), and calls through a parameter, are in
+neither number. The CLI checks each language against its own TESTING target, and the web banner uses the same
+data. Reason: with all raw calls in the denominator Python could not reach 65% (psf/requests 38.6%,
+pallets/click 56.0%) because most calls go to stdlib or builtins.
+**Consequences:** Rates are comparable with TypeScript Tier 3. Old stored analyses keep their larger totals.
+**Open for the lead:** confirm this definition change before M3 acceptance is ticked.
+
+## D33 — Python plugin conventions (2026-11-22)
+**Decision:** Python is Tier 1 (`prepare`/`extract`/`resolve`). Roots: repo root, `src/`, `pyproject.toml` and
+`setup.cfg` entries (parsed by a small strict TOML subset parser and a linear INI reader with size and line
+caps, never executed), and `__init__.py` chains. Module names come from the path; collisions: package first, then
+alphabetical. Imports keep dots in the specifier; stdlib imports become `ext:pypi:stdlib`, others
+`ext:pypi:{top}`; Python modules bind by `file:` id. `from pkg import name` tries symbol, submodule, then one
+level of re-export (two-pass, so cycles cannot loop). Function-level imports are scoped to the function (overlay),
+module-level wins elsewhere. `.pyi` stubs are skipped (they would duplicate the module's symbols). Calls are kind
+`call`; a class call goes to `__init__` (own or inherited), else a `references` edge. Same-file definitions beat
+imports. A missed `super().m()` is unresolved. Fixture `fixtures/python` was corrected: `Admin(User)` without an
+`__init__` calls `User.__init__`.
+**Consequences:** See LANGUAGE_PLUGINS section 6. Not covered: `__all__` beyond literals, two-level re-exports,
+`setup.py`, flow-sensitive typing.
+
+## D34 — Grammar and query bundling (2026-11-22)
+**Decision:** `web-tree-sitter` is bundled by esbuild into `server.js`; its wasm and each grammar wasm are copied to
+`app\grammars`, Python query files to `app\queries\python`. A banner at the top of `server.js` sets `GRAMMAR_DIR`,
+`TREE_SITTER_WASM_DIR` and `PYTHON_QUERIES_DIR` from the file location when unset (the Python plugin loads its
+queries at import time). `applyGrammarDefaults` in `config.ts` does the same for the wasm dirs later.
+**Consequences:** No `web.config` variables. `verify-bundle.ts` has 17 checks including a Python parse from an
+unrelated cwd.
+
+## D35 — Shared resolver helpers in plugin-api (2026-11-22)
+**Decision:** LANGUAGE_PLUGINS section 5 steps are composable pure functions in `plugin-api/src/resolve`
+(`resolveReference`, `applySuperTypes`, `toEdges`, ...). A binding to an external ends resolution with reason
+`external` (no name-match, to avoid false edges). Top-level symbols have `parentId = file:{path}`, so helpers use
+`isTopLevelSymbol`. Name-match results are never recorded as super types.
+
+## D36 — Untrusted-input limits in the Python path (2026-11-22)
+**Decision:** Review found three superlinear paths reachable from a hostile repo: receiver inference, annotation
+owner lookup in `postProcess` (now a sorted sweep) and the `setup.cfg` key regex (now an `indexOf`-style scan,
+200 KB total and 2,000 chars per line). All stages after parsing now respect the per-file deadline. Parsing in a
+worker thread (planned for M4) remains the real protection for a runaway grammar.
 
 ---
 
@@ -279,3 +344,6 @@ unrelated cwd the way IIS does.
 | 2026-11-20 | TypeScript | this repo (packages + apps) | ~150 | 99.9% (1615/1617) | 0% | 3.2 s | 48 cross-package calls after D18 |
 | 2026-11-20 | TypeScript | sindresorhus/ky | 98 | 97.6% (1674/1715) | 0% | 4.7 s | before the D18 fix; network run, unauthenticated |
 | 2026-11-20 | TypeScript | sindresorhus/ky @ 3541888 | 98 | 97.6% (1674/1715) | 0% | 7.6 s | lead's final acceptance run (CLI and POST /api/analyses to `done`; graph, deps, search, source verified; traversal gives 404) |
+| 2026-11-22 | Python | fixtures/python | 11 | golden | n/a | <1 s | golden fixture, 1 parse-error file |
+| 2026-11-22 | Python | psf/requests @ 3c7baaa | 37 | 86.8% (1046/1205) | 2.9% | 0.7 s | D32 denominator; 38.6% over all raw calls; precision sample 39/40 |
+| 2026-11-22 | Python | pallets/click @ 08b803c | 91 | 90.3% (4058/4494) | 5.3% | 1.6 s | D32 denominator; 56.0% over all raw calls; precision sample 40/40 |

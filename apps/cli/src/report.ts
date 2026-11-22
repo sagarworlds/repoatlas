@@ -47,16 +47,29 @@ export function evaluateQuality(stats: AnalysisStats): { ok: boolean; reasons: s
   const languages = Object.entries(stats.languages).filter(
     (entry): entry is [string, NonNullable<(typeof entry)[1]>] => entry[1] !== undefined,
   );
-  // References are counted for the whole repository, so the target of the dominant
-  // language (most files) is used.
-  const dominant = [...languages].sort((a, b) => b[1].files - a[1].files)[0]?.[0];
-  const target = dominant ? (RESOLUTION_TARGETS[dominant] ?? DEFAULT_TARGET) : DEFAULT_TARGET;
-
-  const { total, resolved } = stats.references;
-  if (total > 0 && resolved / total < target) {
-    reasons.push(
-      `resolution rate ${pct(resolved, total)} is below the ${Math.round(target * 100)}% target for ${dominant ?? "unknown"}`,
-    );
+  // Each language is checked against its own target when it has per-language reference
+  // counts. Analyses without them (older ones) fall back to the whole-repository counts and
+  // the target of the dominant language (most files).
+  const withCounts = languages.filter(([, info]) => info.references !== undefined);
+  if (withCounts.length > 0) {
+    for (const [id, info] of withCounts) {
+      const { total, resolved } = info.references ?? { total: 0, resolved: 0 };
+      const target = RESOLUTION_TARGETS[id] ?? DEFAULT_TARGET;
+      if (total > 0 && resolved / total < target) {
+        reasons.push(
+          `${id} resolution rate ${pct(resolved, total)} is below the ${Math.round(target * 100)}% target`,
+        );
+      }
+    }
+  } else {
+    const dominant = [...languages].sort((a, b) => b[1].files - a[1].files)[0]?.[0];
+    const target = dominant ? (RESOLUTION_TARGETS[dominant] ?? DEFAULT_TARGET) : DEFAULT_TARGET;
+    const { total, resolved } = stats.references;
+    if (total > 0 && resolved / total < target) {
+      reasons.push(
+        `resolution rate ${pct(resolved, total)} is below the ${Math.round(target * 100)}% target for ${dominant ?? "unknown"}`,
+      );
+    }
   }
   const allExempt = languages.length > 0 && languages.every(([id]) => NAME_MATCH_EXEMPT.has(id));
   const edgeTotal =
@@ -75,6 +88,21 @@ export function evaluateQuality(stats: AnalysisStats): { ok: boolean; reasons: s
   }
   if (stats.truncated) reasons.push("graph was truncated at the node or edge cap");
   return { ok: reasons.length === 0, reasons };
+}
+
+/** One line per language: its resolution rate and PASS/WARN against its target. */
+function perLanguageLines(stats: AnalysisStats): string[] {
+  const lines: string[] = [];
+  for (const [id, info] of Object.entries(stats.languages)) {
+    if (info?.references === undefined) continue;
+    const { total, resolved } = info.references;
+    const target = RESOLUTION_TARGETS[id] ?? DEFAULT_TARGET;
+    const verdict = total === 0 || resolved / total >= target ? "PASS" : "WARN";
+    lines.push(
+      `${id}: ${resolved} / ${total} (${pct(resolved, total)}), target ${Math.round(target * 100)}% ${verdict}`,
+    );
+  }
+  return lines.sort();
 }
 
 /** Formats the human-readable report printed by the CLI. */
@@ -120,6 +148,7 @@ export function formatStats(stats: AnalysisStats, meta: ReportMeta): string {
     ...section("References", [
       `resolved: ${refs.resolved} / ${refs.total} (${pct(refs.resolved, refs.total)})`,
       `unresolved: ${refs.unresolved}`,
+      ...perLanguageLines(stats),
       `name-match share of edges: ${pct(stats.edgesByConfidence["name-match"] ?? 0, edgeTotal)}`,
     ]),
   );

@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readRecent } from "../lib/recent.ts";
@@ -67,6 +67,16 @@ describe("HomePage", () => {
     expect(alert).toHaveTextContent("No such repository on GitHub.");
   });
 
+  it("marks supported languages active and planned ones as coming soon", () => {
+    mockFetch(() => ({ status: 200, body: { analyses: [] } }));
+    renderApp(<HomePage />, { path: "/" });
+    const chips = screen.getByRole("list", { name: "Languages" });
+    expect(within(chips).getByText("Python").closest("li")).not.toHaveTextContent("soon");
+    expect(within(chips).getByText("Go").closest("li")).toHaveTextContent("(soon)");
+    expect(screen.getByRole("button", { name: /pallets\/click/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /spf13\/cobra/ })).toBeDisabled();
+  });
+
   it("starts an example, and disables examples of unsupported languages", async () => {
     const fetchMock = mockFetch((_url, init) =>
       init?.method === "POST"
@@ -74,7 +84,7 @@ describe("HomePage", () => {
         : { status: 200, body: { analyses: [] } },
     );
     renderApp(<HomePage />, { path: "/" });
-    expect(screen.getByRole("button", { name: /pallets\/click/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /spf13\/cobra/ })).toBeDisabled();
     await userEvent.click(screen.getByRole("button", { name: /sindresorhus\/ky/ }));
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/a/an_new"));
     const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");

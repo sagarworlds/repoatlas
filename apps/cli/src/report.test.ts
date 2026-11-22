@@ -73,6 +73,29 @@ describe("formatStats", () => {
   });
 });
 
+describe("per-language resolution", () => {
+  const polyglot = makeStats({
+    languages: {
+      typescript: { files: 3, bytes: 1, pluginTier: 3, references: { total: 100, resolved: 95 } },
+      python: { files: 9, bytes: 1, pluginTier: 1, references: { total: 100, resolved: 60 } },
+    },
+    references: { total: 200, resolved: 155, unresolved: 45 },
+  });
+
+  it("prints a rate and verdict per language", () => {
+    const text = formatStats(polyglot, META);
+    expect(text).toContain("typescript: 95 / 100 (95.0%), target 90% PASS");
+    expect(text).toContain("python: 60 / 100 (60.0%), target 65% WARN");
+  });
+
+  it("warns for the language that misses its own target", () => {
+    const verdict = evaluateQuality(polyglot);
+    expect(verdict.ok).toBe(false);
+    expect(verdict.reasons.join(" ")).toContain("python resolution rate 60.0%");
+    expect(verdict.reasons.join(" ")).not.toContain("typescript resolution rate");
+  });
+});
+
 describe("evaluateQuality", () => {
   it("applies the language-specific target of the dominant language", () => {
     const python = makeStats({

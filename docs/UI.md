@@ -30,7 +30,8 @@ code panel loads at most 2,000 lines per request.
 ## Home
 
 - Input: GitHub URL (accept `owner/repo` shorthand too) + optional ref. Inline
-  validation; show supported languages as small chips.
+  validation; show all languages as small chips (supported ones active, planned ones muted
+  with "(soon)"), driven by `config/languages.ts`.
 - "Try" examples: 3–4 small, well-known repos in different languages (one TS, one
   Python, one Go...). Keep the list in a config file.
 - Recent: user's own recent analyses from `localStorage` (id, repo, date, status),
@@ -109,7 +110,12 @@ move, Enter to select (selects node and opens the most relevant tab).
 ## Empty, loading and error states
 Every panel has explicit states. A file with parse errors shows a small warning badge.
 Show a banner in the explorer when stats show a low resolution rate (< 50%) for a
-language: "Call links for <language> are approximate (dashed lines are name matches)."
+language: one combined notice, "Call links for Python and TypeScript are approximate (dashed
+lines are name matches)." Rates come from `stats.languages[lang].references` (a language is low
+when it has references and resolved/total < 50%); analyses without per-language data fall back
+to the overall rate.
+The explorer header (desktop) and the detail panel show a chip per language: files, tier and
+resolution rate as text, tier explanation in a tooltip.
 
 ## Accessibility
 Keyboard-navigable tree and search; visible focus; color is never the only signal

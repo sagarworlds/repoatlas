@@ -1,0 +1,58 @@
+{
+  "expectLanguages": ["typescript", "python"],
+  "noCrossLanguageEdges": true,
+  "mustContainNodes": [
+    { "id": "sym:web/src/util.ts#formatName", "kind": "function", "meta": { "isExported": true } },
+    { "id": "sym:web/src/api.ts#greet", "kind": "function", "meta": { "isExported": true } },
+    { "id": "sym:app/helpers.py#build_url", "kind": "function" },
+    { "id": "sym:app/main.py#fetch", "kind": "function" },
+    { "id": "sym:app/main.py#main", "kind": "function" },
+    { "id": "ext:npm:lodash", "kind": "external" },
+    { "id": "ext:pypi:requests", "kind": "external" }
+  ],
+  "mustContainEdges": [
+    {
+      "src": "sym:web/src/api.ts#greet",
+      "dst": "sym:web/src/util.ts#formatName",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:web/src/api.ts",
+      "dst": "file:web/src/util.ts",
+      "kind": "imports",
+      "minConfidence": "exact"
+    },
+    { "src": "file:web/src/api.ts", "dst": "ext:npm:lodash", "kind": "imports" },
+    {
+      "src": "sym:app/main.py#fetch",
+      "dst": "sym:app/helpers.py#build_url",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:app/main.py#main",
+      "dst": "sym:app/main.py#fetch",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:app/main.py",
+      "dst": "file:app/helpers.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    { "src": "file:app/main.py", "dst": "ext:pypi:requests", "kind": "imports" }
+  ],
+  "mustNotContainEdges": [
+    { "src": "sym:app/main.py#fetch", "dst": "ext:pypi:requests", "kind": "calls" },
+    { "src": "sym:web/src/api.ts#greet", "dst": "ext:npm:lodash", "kind": "calls" },
+    { "src": "sym:web/src/api.ts#greet", "dst": "sym:app/helpers.py#build_url", "kind": "calls" },
+    { "src": "sym:app/main.py#fetch", "dst": "sym:web/src/util.ts#formatName", "kind": "calls" },
+    { "src": "file:app/main.py", "dst": "ext:npm:lodash", "kind": "imports" },
+    { "src": "file:web/src/api.ts", "dst": "ext:pypi:requests", "kind": "imports" }
+  ],
+  "mustBeUnresolved": [],
+  "parseErrorFiles": [],
+  "minResolutionRate": 0.8
+}

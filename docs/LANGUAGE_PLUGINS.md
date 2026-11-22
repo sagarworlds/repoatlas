@@ -6,7 +6,7 @@
 |---|---|---|---|---|---|
 | TypeScript | lang-typescript | 3 (TS compiler API) | implemented (M1) | fixtures/typescript | `allowJs` off until M4; workspace packages resolved through injected `paths`; TS 6 pinned (DECISIONS D6) |
 | JavaScript | lang-typescript | 3 (`allowJs`) | planned (M4) | fixtures/javascript | CommonJS + ESM |
-| Python | lang-python | 1 (tree-sitter) | planned (M3) | fixtures/python | |
+| Python | lang-python | 1 (tree-sitter) | implemented (M3) | fixtures/python, fixtures/polyglot | `.py` only (`.pyi` stubs skipped); src-layout roots from `pyproject.toml`/`setup.cfg`; stdlib grouped as `ext:pypi:stdlib`; see section 6 and DECISIONS D30-D36 |
 | Go | lang-go | 1 | planned (M4) | fixtures/go | |
 | Java | lang-java | 1 | planned (M4) | fixtures/java | |
 | C# | lang-csharp | 1 | planned (M5) | fixtures/csharp | |
@@ -96,18 +96,19 @@ export interface SymbolIndex {
 ## 4. Tier 1 engine (`packages/treesitter`)
 
 - Use **`web-tree-sitter`** (WASM) — no native compilation, works on Windows/Linux/macOS.
-- Grammar `.wasm` files: start with a prebuilt bundle (e.g. the `tree-sitter-wasms`
-  npm package) or build from each grammar's repo. **The grammar ABI must be compatible
-  with the installed `web-tree-sitter` version** — pin both versions and add a test
-  that loads every grammar. Check the installed version's API (`Parser.init()`,
-  `Language.load()`, and whether queries use `new Query(lang, src)` or
-  `lang.query(src)`) rather than assuming.
+- Grammar `.wasm` files come from each grammar's own npm package (for Python,
+  `tree-sitter-python/tree-sitter-python.wasm`), pinned together with `web-tree-sitter`
+  (0.27.2). The old `tree-sitter-wasms` bundle does not load with it (DECISIONS D30).
+  `verifyGrammars()` loads a list of grammars and reports ABI problems. API in use:
+  `Parser.init()`, `Language.load(path)`, `new Query(lang, src)`, `query.matches(node)`.
+  Paths are resolved with `createRequire` (or `GRAMMAR_DIR` / `TREE_SITTER_WASM_DIR` in
+  a bundle).
 - Each Tier 1 language provides a **spec**:
 
 ```ts
 export interface TreeSitterLanguageSpec {
   language: LanguageId;
-  grammarWasm: string;                 // path resolved at runtime
+  grammarWasm: string | (() => string); // absolute path, resolved lazily at runtime
   extensions: string[];
   queries: {
     definitions: string;               // captures: @definition.class/.interface/.function/.method, @name, @body
@@ -121,6 +122,8 @@ export interface TreeSitterLanguageSpec {
     superNames: string[];              // ["super"]
   };
   signature(node: SyntaxNode, src: string): string | undefined;
+  /** Type name the receiver of `x.m()` obviously has (fills `RawReference.receiverTypeHint`). */
+  inferReceiverType?(ctx: ReceiverTypeContext): string | undefined;
   /** Language-specific fix-ups (e.g. Go receiver methods, Rust impl blocks). */
   postProcess?(ex: FileExtraction, tree: Tree, src: string): FileExtraction;
 }
@@ -129,6 +132,18 @@ export interface TreeSitterLanguageSpec {
 - Store queries as `.scm` files next to the spec (`packages/lang-python/queries/*.scm`).
   The grammar repos' own `queries/tags.scm` are a good starting point — adapt them, keep
   attribution/licence notes in a `queries/README.md`.
+- Queries run with `query.matches()` so the captures of one pattern stay grouped. Capture
+  conventions (full list in `packages/treesitter/README.md`):
+  - definitions: `@definition.class|interface|function|method` on the whole node, `@name`
+    on the identifier. A function directly inside a `containerTypes` node is a method.
+    Duplicate ids become `f@<startLine>`. `@body` is not used.
+  - imports: `@import` (whole statement), `@import.module`, `@import.name` (repeats are
+    merged into one `named` import), `@import.alias`, `@import.wildcard`.
+  - references: `@reference.call|extends|implements|type|instantiate` on the whole node,
+    `@name`, optional `@receiver` and `@args` (gives `argCount`).
+- Each file has a parse deadline (`DEFAULT_PARSE_TIMEOUT_MS`, 10 s) covering parse, queries,
+  receiver inference and `postProcess`; on expiry the file is reported as a parse error.
+  Trees and queries are freed after use.
 - The generic engine: parse → run definition query → build definition tree from
   capture nesting → run import query → run reference query → attach each reference to
   its innermost enclosing definition (`fromLocalId`) by span containment.
@@ -219,7 +234,25 @@ Plugins also produce, per file, a **binding map** `localName → nodeId` used by
 - Methods: functions directly inside `class_definition`. `self.x()`/`cls.x()` → self.
   Decorators → `meta["py.decorators"]`. `@staticmethod`/`@classmethod` → `isStatic`.
 - `Foo()` where `Foo` resolves to a class → call to `Foo.__init__` if defined, else reference.
-- Test files: `test_*.py`, `*_test.py`, `tests/` → `isTest`.
+- Test files: `test_*.py`, `*_test.py`, `conftest.py`, `tests/` or `test/` → `isTest`.
+- Implementation notes (M3, see DECISIONS D31-D36):
+  - Relative imports keep their dots in the specifier (`.`, `..pkg`). `from . import x` in a
+    root-level module looks `x` up among the root modules; climbing to or past the top
+    package is unresolved, never an external. Calls are always kind `call`; calling a
+    class goes to `__init__` (own or inherited), else a `references` edge.
+  - stdlib imports collapse into one `ext:pypi:stdlib` node (meta `package(s)`). Python
+    modules are bound by `file:` id (no `mod:` nodes). A stdlib-named directory without
+    `__init__.py` does not shadow the stdlib.
+  - Function-level imports bind for that function (overlay on the file-wide map; a
+    module-level import of the same name wins elsewhere). Try/except imports are file-wide.
+  - Receiver hints (`receiverTypeHint`): same-scope `x = Foo()`, annotations, parameters,
+    `Foo().m()`, `self.x = Foo()` attributes, pytest fixtures; every binding must agree.
+    Meta keys: `py.decorators`, `py.staticmethod|classmethod|property`, `py.params`,
+    `py.returns`.
+  - A call through a parameter makes no edge. A missed `super().m()` is unresolved (never
+    name-matched). Names that are builtins or builtin-type methods are not reported as
+    unresolved.
+  - Only one level of re-export is followed; `__all__` is read only as a literal list.
 
 ### Go (`lang-go`)
 - Read `go.mod` for the module path (multiple `go.mod` → multiple modules).

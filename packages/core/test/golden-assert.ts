@@ -11,6 +11,10 @@ export interface ExpectedGraph {
   mustBeUnresolved: { file: string; name: string; kind: string }[];
   parseErrorFiles: string[];
   minResolutionRate: number;
+  /** Multi-language fixtures: languages that must appear in `stats.languages`. */
+  expectLanguages?: string[];
+  /** Multi-language fixtures: no edge may connect files of two different languages. */
+  noCrossLanguageEdges?: boolean;
 }
 
 export function loadExpected(path: string): ExpectedGraph {
@@ -67,7 +71,30 @@ export function assertGolden(expected: ExpectedGraph, result: PipelineResult): v
   }
   expect(result.stats.parseErrorFiles).toBe(expected.parseErrorFiles.length);
 
+  if (expected.expectLanguages) {
+    expect(Object.keys(result.stats.languages).sort()).toEqual(
+      [...expected.expectLanguages].sort(),
+    );
+  }
+  if (expected.noCrossLanguageEdges) assertNoCrossLanguageEdges(result);
+
   const { resolved, unresolved } = result.stats.references;
   const rate = resolved + unresolved === 0 ? 1 : resolved / (resolved + unresolved);
   expect(rate).toBeGreaterThanOrEqual(expected.minResolutionRate);
+}
+
+/** Languages of the files an edge connects (external and repo nodes have none). */
+function assertNoCrossLanguageEdges(result: PipelineResult): void {
+  const languageOfNode = new Map<string, string>();
+  for (const n of result.nodes) {
+    if (n.language !== undefined) languageOfNode.set(n.id, n.language);
+  }
+  for (const e of result.edges) {
+    if (e.kind === "contains") continue;
+    const a = languageOfNode.get(e.src);
+    const b = languageOfNode.get(e.dst);
+    if (a !== undefined && b !== undefined) {
+      expect(a, `${e.kind} ${e.src} -> ${e.dst}`).toBe(b);
+    }
+  }
 }

@@ -184,7 +184,12 @@ export interface AnalysisStats {
   schemaVersion: number;
   analyzerVersion: string;
   commitSha: string;
-  languages: Partial<Record<LanguageId, { files: number; bytes: number; pluginTier: 1 | 2 | 3 }>>;
+  languages: Partial<Record<LanguageId, {
+    files: number;
+    bytes: number;
+    pluginTier: 1 | 2 | 3;
+    references?: { total: number; resolved: number };  // per-language rate (absent in old analyses)
+  }>>;
   nodesByKind: Partial<Record<NodeKind, number>>;
   edgesByKind: Partial<Record<EdgeKind, number>>;
   edgesByConfidence: Record<Confidence, number>;
@@ -198,8 +203,11 @@ export interface AnalysisStats {
 }
 ```
 
-`references` counts only `calls` (see DECISIONS D17): `resolved` = surviving calls edges,
-`unresolved` = unresolved entries of kind `call`. Skipped-file reasons are short ids
+`references` counts only `calls` (see DECISIONS D17 and D32): `resolved` = surviving calls edges,
+`unresolved` = unresolved entries of kind `call`, and `total = resolved + unresolved` for every
+plugin tier. Calls into externals, builtins and stoplisted builtin-type methods, and calls
+through a parameter, are in neither number. `languages[lang].references` is the same count
+attributed to the language of the source file; the top-level `references` is their sum. Skipped-file reasons are short ids
 (`binary`, `lockfile`, `generated-path`, `minified`, `too-large`, `extract-error`, ...).
 
 ## 6. Rollups (aggregated views)

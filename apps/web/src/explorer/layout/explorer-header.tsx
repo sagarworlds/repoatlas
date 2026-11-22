@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { AnalysisRecordDto } from "../../api/types.ts";
 import { shortSha } from "../../lib/format.ts";
+import { AnalysisLanguageChips } from "./analysis-language-chips.tsx";
 import { ExplorerTabs } from "./explorer-tabs.tsx";
 
 const BUTTON = "h-8 rounded-md border border-line-strong px-2 text-sm hover:bg-surface-2";
@@ -65,6 +66,8 @@ export function ExplorerHeader(props: ExplorerHeaderProps) {
           )}
         </span>
       </div>
+
+      {!narrow && <AnalysisLanguageChips stats={analysis.stats} />}
 
       <ExplorerTabs />
 

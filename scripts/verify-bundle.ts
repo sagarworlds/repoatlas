@@ -7,7 +7,10 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { repoRoot } from "./build-api.ts";
+import { build } from "esbuild";
+import { CJS_BANNER, repoRoot } from "./build-api.ts";
+import { findPackageDir } from "./bundle-deps.ts";
+import { GRAMMAR_FILES } from "./grammars.ts";
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = ""): void {
@@ -39,6 +42,56 @@ async function waitForHealth(base: string, child: ChildProcess): Promise<boolean
     await new Promise((r) => setTimeout(r, 200));
   }
   return false;
+}
+
+/**
+ * Builds scripts/smoke-entry.ts into a temporary file next to server.js (so the layout
+ * logic sees the real bundle folders), runs it from an unrelated cwd with NO grammar
+ * environment variables, and deletes it again.
+ */
+async function smokeParsePython(out: string, work: string): Promise<void> {
+  const distDir = path.join(out, "app", "apps", "api", "dist");
+  const smokeJs = path.join(distDir, "smoke-verify.js");
+  try {
+    await build({
+      entryPoints: [path.join(repoRoot, "scripts", "smoke-entry.ts")],
+      outfile: smokeJs,
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      target: "node22",
+      // Same externals and bundling as server.js; web-tree-sitter is bundled, wasm is on disk.
+      external: ["better-sqlite3", "typescript"],
+      alias: {
+        "web-tree-sitter": path.join(
+          findPackageDir("web-tree-sitter", path.join(repoRoot, "packages", "treesitter")),
+          "web-tree-sitter.js",
+        ),
+      },
+      banner: { js: CJS_BANNER },
+      logLevel: "silent",
+    });
+    const env: NodeJS.ProcessEnv = { ...process.env, DATA_DIR: path.join(work, "smoke-data") };
+    delete env.GRAMMAR_DIR;
+    delete env.TREE_SITTER_WASM_DIR;
+    const run = spawnSync(process.execPath, [smokeJs], {
+      cwd: path.parse(tmpdir()).root,
+      env,
+      encoding: "utf8",
+      timeout: 60000,
+    });
+    const line = (run.stdout ?? "").trim().split("\n").pop()?.trim() ?? "";
+    check(
+      "bundled web-tree-sitter parses Python via bundle layout (unrelated cwd)",
+      run.status === 0,
+      line === "" ? (run.stderr ?? "").slice(0, 300) : line,
+    );
+  } catch (err) {
+    check("bundled Python smoke test", false, err instanceof Error ? err.message : String(err));
+  } finally {
+    await rm(smokeJs, { force: true });
+    await rm(`${smokeJs}.map`, { force: true });
+  }
 }
 
 async function main(): Promise<void> {
@@ -90,6 +143,12 @@ async function main(): Promise<void> {
       "bundled typescript present",
       existsSync(path.join(out, "app", "node_modules", "typescript", "package.json")),
     );
+
+    const grammarsDir = path.join(out, "app", "grammars");
+    for (const g of GRAMMAR_FILES) {
+      check(`grammars/${g.file} present`, existsSync(path.join(grammarsDir, g.file)));
+    }
+    await smokeParsePython(out, work);
 
     // .env sits OUTSIDE app\ (like C:\NodeApps\repoatlas\.env): proves it is found via the entry file.
     await writeFile(path.join(out, ".env"), "CORS_ORIGIN=http://dry-run.example\n");

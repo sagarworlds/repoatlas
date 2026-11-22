@@ -11,6 +11,7 @@ import type {
 } from "../../api/types.ts";
 import { describeError } from "../../lib/error-text.ts";
 import { shortSha } from "../../lib/format.ts";
+import { AnalysisLanguageChips } from "../layout/analysis-language-chips.tsx";
 import {
   applyPatch,
   type ExplorerParams,
@@ -77,7 +78,6 @@ function RepoOverview(props: { analysis: AnalysisRecordDto }) {
   const { analysis } = props;
   const stats: AnalysisStats | null = analysis.stats;
   const rate = stats ? resolutionRate(stats) : undefined;
-  const languages = stats ? Object.entries(stats.languages) : [];
 
   return (
     <div className="space-y-4 p-3 text-sm" data-testid="detail-panel">
@@ -99,16 +99,7 @@ function RepoOverview(props: { analysis: AnalysisRecordDto }) {
       {stats && (
         <>
           <Section title="Languages">
-            <ul className="space-y-0.5">
-              {languages.map(([id, info]) => (
-                <li key={id} className="flex justify-between gap-2">
-                  <span>{id}</span>
-                  <span className="text-muted">
-                    {info?.files ?? 0} {info?.files === 1 ? "file" : "files"}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <AnalysisLanguageChips stats={stats} />
           </Section>
           <Section title="Contents">
             <dl className="grid grid-cols-2 gap-x-3 gap-y-0.5">

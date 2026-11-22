@@ -21,6 +21,7 @@ import {
   renderWebConfig,
 } from "./bundle-lib.ts";
 import { API_EXTERNALS } from "./externals.ts";
+import { copyDataDirs, copyGrammars } from "./grammars.ts";
 
 /** Total size of a folder in bytes. */
 function dirSize(dir: string): number {
@@ -78,6 +79,9 @@ async function main(): Promise<void> {
     for (const name of API_EXTERNALS) pinned[name] = versions[name] ?? "";
     writeFileSync(path.join(appDir, "package.json"), renderBundlePackageJson(pinned));
 
+    const grammarFiles = copyGrammars(appDir, repoRoot);
+    copyDataDirs(appDir, repoRoot);
+
     mkdirSync(path.join(out, "site"), { recursive: true });
     writeFileSync(path.join(out, "site", "web.config"), renderWebConfig(args.root));
     cpSync(path.join(repoRoot, ".env.example"), path.join(out, ".env.example"));
@@ -96,6 +100,7 @@ async function main(): Promise<void> {
         .map(([n, v]) => `${n}@${v}`)
         .join(", ")})`,
     );
+    console.log(`  app/grammars        ${grammarFiles.join(", ")}`);
     console.log(`  total               ${mb(dirSize(out))}`);
     console.log(
       `NOTE: better-sqlite3 is native. This bundle only runs on ${process.platform}/${process.arch} with Node ${process.versions.node.split(".")[0]}.x (build on Windows x64 with the server's Node major).`,

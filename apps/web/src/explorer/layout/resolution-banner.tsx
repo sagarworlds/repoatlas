@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { AnalysisRecordDto, AnalysisStats } from "../../api/types.ts";
+import { languageName } from "../../config/languages.ts";
 
 /** Below this share of resolved references, call links are called "approximate". */
 export const LOW_RESOLUTION_THRESHOLD = 0.5;
@@ -25,23 +26,50 @@ function rememberDismissed(analysisId: string): void {
   }
 }
 
+/** "A", "A and B", "A, B and C". */
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
 /**
  * Notices worth showing for these stats, as plain strings. Pure, so it is easy to test.
- * docs/UI.md asks for a per-language rate, but the stats only hold an overall rate
- * (`references`), so the rate is overall and the languages present are listed.
+ * Per language when the stats carry `languages[id].references` (docs/UI.md); older analyses
+ * only have the overall rate, so that is the fallback.
  */
 export function buildNotices(stats: AnalysisStats | null): string[] {
   if (!stats) return [];
   const notices: string[] = [];
 
-  const { total, resolved } = stats.references;
-  if (total > 0 && resolved / total < LOW_RESOLUTION_THRESHOLD) {
-    const languages = Object.keys(stats.languages).sort();
-    const suffix = languages.length > 0 ? ` Languages: ${languages.join(", ")}.` : "";
-    const percent = Math.round((resolved / total) * 100);
-    notices.push(
-      `Call links are approximate (dashed lines are name matches). Only ${percent}% of references were resolved.${suffix}`,
-    );
+  const entries = Object.entries(stats.languages);
+  const hasPerLanguage = entries.some(([, info]) => info?.references !== undefined);
+  if (hasPerLanguage) {
+    const lowNames = entries
+      .filter(([, info]) => {
+        const refs = info?.references;
+        return (
+          refs !== undefined &&
+          refs.total > 0 &&
+          refs.resolved / refs.total < LOW_RESOLUTION_THRESHOLD
+        );
+      })
+      .map(([id]) => languageName(id))
+      .sort();
+    if (lowNames.length > 0) {
+      notices.push(
+        `Call links for ${joinNames(lowNames)} are approximate (dashed lines are name matches).`,
+      );
+    }
+  } else {
+    const { total, resolved } = stats.references;
+    if (total > 0 && resolved / total < LOW_RESOLUTION_THRESHOLD) {
+      const names = entries.map(([id]) => languageName(id)).sort();
+      const forWhom = names.length > 0 ? ` for ${joinNames(names)}` : "";
+      const percent = Math.round((resolved / total) * 100);
+      notices.push(
+        `Call links${forWhom} are approximate (dashed lines are name matches). Only ${percent}% of references were resolved.`,
+      );
+    }
   }
 
   if (stats.truncated) {

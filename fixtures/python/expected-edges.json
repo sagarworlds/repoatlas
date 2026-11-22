@@ -1,0 +1,461 @@
+{
+  "mustContainNodes": [
+    { "id": "sym:src/shop/models.py#Entity", "kind": "class" },
+    { "id": "sym:src/shop/models.py#Entity.__init__", "kind": "method" },
+    { "id": "sym:src/shop/models.py#Entity.describe", "kind": "method" },
+    { "id": "sym:src/shop/models.py#Entity.touch", "kind": "method" },
+    { "id": "sym:src/shop/models.py#User", "kind": "class" },
+    { "id": "sym:src/shop/models.py#User.__init__", "kind": "method" },
+    { "id": "sym:src/shop/models.py#User.create", "kind": "method", "meta": { "isStatic": true } },
+    {
+      "id": "sym:src/shop/models.py#User.normalize",
+      "kind": "method",
+      "meta": { "isStatic": true }
+    },
+    { "id": "sym:src/shop/models.py#User.display_name", "kind": "method" },
+    { "id": "sym:src/shop/models.py#User.validate", "kind": "method" },
+    { "id": "sym:src/shop/models.py#User.save", "kind": "method" },
+    { "id": "sym:src/shop/models.py#User.describe", "kind": "method" },
+    { "id": "sym:src/shop/models.py#Order", "kind": "class" },
+    { "id": "sym:src/shop/models.py#Order.Status", "kind": "class" },
+    { "id": "sym:src/shop/models.py#Order.Status.label", "kind": "method" },
+    { "id": "sym:src/shop/models.py#Order.__init__", "kind": "method" },
+    { "id": "sym:src/shop/models.py#Order.add_line", "kind": "method" },
+    { "id": "sym:src/shop/models.py#Order.total", "kind": "method" },
+    { "id": "sym:src/shop/models.py#Order.summary", "kind": "method" },
+    { "id": "sym:src/shop/service.py#Registry", "kind": "class" },
+    { "id": "sym:src/shop/service.py#Registry.__init__", "kind": "method" },
+    { "id": "sym:src/shop/service.py#Registry.get", "kind": "method" },
+    { "id": "sym:src/shop/service.py#Registry.put", "kind": "method" },
+    { "id": "sym:src/shop/service.py#Admin", "kind": "class" },
+    { "id": "sym:src/shop/service.py#Admin.promote", "kind": "method" },
+    { "id": "sym:src/shop/service.py#load_order", "kind": "function" },
+    { "id": "sym:src/shop/service.py#order_total", "kind": "function" },
+    { "id": "sym:src/shop/service.py#register", "kind": "function" },
+    { "id": "sym:src/shop/service.py#register_admin", "kind": "function" },
+    { "id": "sym:src/shop/service.py#create_via_alias", "kind": "function" },
+    { "id": "sym:src/shop/service.py#price_label", "kind": "function" },
+    { "id": "sym:src/shop/billing.py#charge", "kind": "function" },
+    { "id": "sym:src/shop/billing.py#refund", "kind": "function" },
+    { "id": "sym:src/shop/reports.py#CsvReport", "kind": "class" },
+    { "id": "sym:src/shop/reports.py#CsvReport.render", "kind": "method" },
+    { "id": "sym:src/shop/reports.py#HtmlReport", "kind": "class" },
+    { "id": "sym:src/shop/reports.py#HtmlReport.render", "kind": "method" },
+    { "id": "sym:src/shop/reports.py#export", "kind": "function" },
+    { "id": "sym:src/shop/utils/__init__.py#shout", "kind": "function" },
+    { "id": "sym:src/shop/utils/helpers.py#format_price", "kind": "function" },
+    { "id": "sym:src/shop/utils/helpers.py#slugify", "kind": "function" },
+    { "id": "sym:src/shop/utils/helpers.py#make_formatter", "kind": "function" },
+    { "id": "sym:src/shop/utils/helpers.py#logged", "kind": "function" },
+    { "id": "sym:src/shop/utils/helpers.py#apply_discount", "kind": "function" },
+    { "id": "sym:src/shop/utils/net.py#fetch_user", "kind": "function" },
+    { "id": "sym:src/shop/utils/net.py#timeout_for", "kind": "function" },
+    { "id": "sym:src/shop/utils/net.py#lazy_slug", "kind": "function" },
+    { "id": "sym:src/shop/broken.py#healthy", "kind": "function" },
+    { "id": "sym:src/shop/broken.py#also_fine", "kind": "function" },
+    { "id": "sym:scripts/seed.py#main", "kind": "function" },
+    { "id": "sym:tests/test_service.py#test_register_returns_receipt", "kind": "function" },
+    { "id": "sym:tests/test_service.py#test_user_roundtrip", "kind": "function" },
+    { "id": "sym:tests/test_service.py#test_order_total_of_empty_order", "kind": "function" },
+    { "id": "file:tests/test_service.py", "kind": "file", "meta": { "isTest": true } },
+    { "id": "ext:pypi:requests", "kind": "external" },
+    { "id": "ext:pypi:ujson", "kind": "external" }
+  ],
+  "mustContainEdges": [
+    {
+      "src": "sym:src/shop/models.py#User.__init__",
+      "dst": "sym:src/shop/models.py#Entity.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#Order.__init__",
+      "dst": "sym:src/shop/models.py#Entity.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#User.describe",
+      "dst": "sym:src/shop/models.py#Entity.describe",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#Entity.touch",
+      "dst": "sym:src/shop/models.py#Entity.describe",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#User.save",
+      "dst": "sym:src/shop/models.py#User.validate",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#User.save",
+      "dst": "sym:src/shop/models.py#Entity.touch",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#User.validate",
+      "dst": "sym:src/shop/models.py#User.normalize",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#User.create",
+      "dst": "sym:src/shop/models.py#User.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#Order.summary",
+      "dst": "sym:src/shop/models.py#Order.total",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#Order.summary",
+      "dst": "sym:src/shop/utils/helpers.py#format_price",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/utils/helpers.py#make_formatter",
+      "dst": "sym:src/shop/utils/helpers.py#format_price",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#load_order",
+      "dst": "sym:src/shop/models.py#User.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#load_order",
+      "dst": "sym:src/shop/models.py#Order.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#order_total",
+      "dst": "sym:src/shop/service.py#load_order",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#order_total",
+      "dst": "sym:src/shop/models.py#Order.total",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#register",
+      "dst": "sym:src/shop/models.py#User.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#register",
+      "dst": "sym:src/shop/models.py#User.save",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#register",
+      "dst": "sym:src/shop/billing.py#charge",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#register_admin",
+      "dst": "sym:src/shop/models.py#User.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#create_via_alias",
+      "dst": "sym:src/shop/models.py#Order.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#create_via_alias",
+      "dst": "sym:src/shop/models.py#User.create",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#price_label",
+      "dst": "sym:src/shop/utils/helpers.py#format_price",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#price_label",
+      "dst": "sym:src/shop/service.py#order_total",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#Admin.promote",
+      "dst": "sym:src/shop/models.py#User.save",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#Admin.promote",
+      "dst": "sym:src/shop/models.py#Entity.touch",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/billing.py#charge",
+      "dst": "sym:src/shop/utils/helpers.py#slugify",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/billing.py#charge",
+      "dst": "sym:src/shop/utils/helpers.py#format_price",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/billing.py#refund",
+      "dst": "sym:src/shop/service.py#order_total",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/reports.py#CsvReport.render",
+      "dst": "sym:src/shop/utils/__init__.py#shout",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/reports.py#export",
+      "dst": "sym:src/shop/reports.py#CsvReport.render",
+      "kind": "calls",
+      "minConfidence": "name-match"
+    },
+    {
+      "src": "sym:src/shop/reports.py#export",
+      "dst": "sym:src/shop/reports.py#HtmlReport.render",
+      "kind": "calls",
+      "minConfidence": "name-match"
+    },
+    {
+      "src": "sym:src/shop/utils/net.py#fetch_user",
+      "dst": "sym:src/shop/models.py#User.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/utils/net.py#lazy_slug",
+      "dst": "sym:src/shop/utils/helpers.py#slugify",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/broken.py#also_fine",
+      "dst": "sym:src/shop/broken.py#healthy",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:tests/test_service.py#test_register_returns_receipt",
+      "dst": "sym:src/shop/service.py#register",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:tests/test_service.py#test_user_roundtrip",
+      "dst": "sym:src/shop/models.py#User.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:tests/test_service.py#test_user_roundtrip",
+      "dst": "sym:src/shop/models.py#User.save",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:tests/test_service.py#test_order_total_of_empty_order",
+      "dst": "sym:src/shop/service.py#order_total",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:scripts/seed.py",
+      "dst": "sym:scripts/seed.py#main",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:scripts/seed.py#main",
+      "dst": "sym:src/shop/service.py#Registry.__init__",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:scripts/seed.py#main",
+      "dst": "sym:src/shop/service.py#Registry.put",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:scripts/seed.py#main",
+      "dst": "sym:src/shop/models.py#User.create",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:scripts/seed.py#main",
+      "dst": "sym:src/shop/service.py#register",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#User",
+      "dst": "sym:src/shop/models.py#Entity",
+      "kind": "extends",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/models.py#Order",
+      "dst": "sym:src/shop/models.py#Entity",
+      "kind": "extends",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/shop/service.py#Admin",
+      "dst": "sym:src/shop/models.py#User",
+      "kind": "extends",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/__init__.py",
+      "dst": "file:src/shop/models.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/models.py",
+      "dst": "file:src/shop/utils/helpers.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/service.py",
+      "dst": "file:src/shop/__init__.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/service.py",
+      "dst": "file:src/shop/models.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/service.py",
+      "dst": "file:src/shop/utils/helpers.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/service.py",
+      "dst": "file:src/shop/billing.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/billing.py",
+      "dst": "file:src/shop/service.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/billing.py",
+      "dst": "file:src/shop/utils/helpers.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/reports.py",
+      "dst": "file:src/shop/utils/__init__.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/utils/net.py",
+      "dst": "file:src/shop/models.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/shop/utils/net.py",
+      "dst": "file:src/shop/utils/helpers.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    { "src": "file:src/shop/utils/net.py", "dst": "ext:pypi:requests", "kind": "imports" },
+    { "src": "file:src/shop/utils/net.py", "dst": "ext:pypi:ujson", "kind": "imports" },
+    {
+      "src": "file:tests/test_service.py",
+      "dst": "file:src/shop/service.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:tests/test_service.py",
+      "dst": "file:src/shop/models.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:scripts/seed.py",
+      "dst": "file:src/shop/__init__.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:scripts/seed.py",
+      "dst": "file:src/shop/service.py",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    }
+  ],
+  "mustNotContainEdges": [
+    { "src": "sym:src/shop/utils/net.py#fetch_user", "dst": "ext:pypi:requests", "kind": "calls" },
+    { "src": "file:src/shop/utils/net.py", "dst": "ext:pypi:requests", "kind": "calls" },
+    {
+      "src": "sym:src/shop/utils/net.py#fetch_user",
+      "dst": "sym:src/shop/service.py#Registry.get",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/shop/utils/net.py#timeout_for",
+      "dst": "sym:src/shop/service.py#Registry.get",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/shop/reports.py#CsvReport.render",
+      "dst": "sym:src/shop/reports.py#HtmlReport.render",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/shop/broken.py#healthy",
+      "dst": "sym:src/shop/broken.py#also_fine",
+      "kind": "calls"
+    }
+  ],
+  "mustBeUnresolved": [],
+  "parseErrorFiles": ["src/shop/broken.py"],
+  "minResolutionRate": 0.8
+}

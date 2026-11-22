@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateAnalysis } from "../api/hooks.ts";
-import { EXAMPLES } from "../config/examples.ts";
+import { EXAMPLES, isExampleAvailable } from "../config/examples.ts";
 import { describeError } from "../lib/error-text.ts";
 import { addRecent } from "../lib/recent.ts";
 import { parseRepoInput, validateRef } from "../lib/repo-input.ts";
@@ -126,7 +126,7 @@ export function AnalyzeForm() {
             <li key={example.repo}>
               <button
                 type="button"
-                disabled={!example.available || create.isPending}
+                disabled={!isExampleAvailable(example) || create.isPending}
                 onClick={() => {
                   setRepoText(example.repo);
                   setRefText("");
@@ -139,7 +139,9 @@ export function AnalyzeForm() {
                   <span className="block text-xs text-muted">{example.description}</span>
                 </span>
                 <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 text-xs text-muted">
-                  {example.available ? example.language : `${example.language} · coming soon`}
+                  {isExampleAvailable(example)
+                    ? example.language
+                    : `${example.language} · coming soon`}
                 </span>
               </button>
             </li>

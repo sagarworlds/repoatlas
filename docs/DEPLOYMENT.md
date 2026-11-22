@@ -98,8 +98,15 @@ single file, so two Node processes must never run at the same time during a recy
    bundled API (`apps/api/dist/server.js`), then assembles `<out>\app` (API, web dist and
    production `node_modules` for `better-sqlite3` and `typescript`) plus `<out>\site\web.config`
    (DECISIONS D29; `pnpm deploy` is not used).
-3. Tree-sitter grammar `.wasm` files are not bundled yet (no grammars exist before M3);
-   the script must copy them once they do.
+3. Tree-sitter files are copied by `scripts/grammars.ts`: `web-tree-sitter.wasm` and each
+   grammar `.wasm` go to `<out>\app\grammars`, and the Python query files to
+   `<out>\app\queries\python`. `server.js` starts with a banner that sets `GRAMMAR_DIR`,
+   `TREE_SITTER_WASM_DIR` and `PYTHON_QUERIES_DIR` from its own location when they are
+   unset (the Python plugin reads its queries at import time, before `loadConfig()`;
+   `applyGrammarDefaults` in `apps/api/src/config.ts` is a secondary default). No
+   `web.config` environment variables are needed. A new language adds one line to
+   `GRAMMAR_FILES` (and to `DATA_DIRS` if it reads query files). `verify-bundle.ts` parses
+   Python through the bundle from an unrelated cwd.
 4. Copy `<out>\app` to `C:\NodeApps\repoatlas\app`, then recycle the app pool.
 
 Write this as a Node script (`scripts/make-deploy-bundle.ts`), not a shell script.

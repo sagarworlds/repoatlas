@@ -18,6 +18,11 @@ import { createPipelineContext } from "./context.ts";
 import { createDiagnostics } from "./diagnostics.ts";
 import { type ParseProgress, type PluginRun, runPluginExtraction } from "./extract.ts";
 import { readClaimedFiles } from "./read-sources.ts";
+import {
+  type ReferenceCounts,
+  type ReferenceLookup,
+  referenceCountsByLanguage,
+} from "./reference-stats.ts";
 import { resolvePlugin, type SanitizedResolution } from "./resolution.ts";
 import { buildStats } from "./stats.ts";
 import { buildSymbolNodes } from "./symbols.ts";
@@ -82,7 +87,10 @@ function collectFileFacts(runs: PluginRun[]): FileFacts[] {
   return facts;
 }
 
-function languageStats(facts: FileFacts[]): AnalysisStats["languages"] {
+function languageStats(
+  facts: FileFacts[],
+  references: ReadonlyMap<LanguageId, ReferenceCounts>,
+): AnalysisStats["languages"] {
   const languages: AnalysisStats["languages"] = {};
   for (const f of facts) {
     const language: LanguageId | undefined = f.language;
@@ -91,6 +99,11 @@ function languageStats(facts: FileFacts[]): AnalysisStats["languages"] {
     entry.files++;
     entry.bytes += f.bytes;
     languages[language] = entry;
+  }
+  for (const entry of Object.values(languages)) entry.references = { total: 0, resolved: 0 };
+  for (const [language, counts] of references) {
+    const entry = languages[language];
+    if (entry) entry.references = { total: counts.total, resolved: counts.resolved };
   }
   return languages;
 }
@@ -231,6 +244,13 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
   const finished = await ctx.time("validate", () => {
     let dropped = 0;
     const references = { total: 0, resolved: 0, unresolved: 0 };
+    const perLanguage = new Map<LanguageId, ReferenceCounts>();
+    const lookup: ReferenceLookup = {
+      languageOfFile: new Map(facts.map((f) => [f.path, f.language])),
+      fileOfNode: new Map(
+        nodes.flatMap((n) => (n.file !== undefined ? [[n.id, n.file] as const] : [])),
+      ),
+    };
     const pluginEdges: GraphEdge[] = [];
     const unresolved: Unresolved[] = [];
     runs.forEach((run, i) => {
@@ -240,24 +260,18 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       pluginEdges.push(...kept);
       unresolved.push(...resolution.unresolved);
 
-      // Reference rule: "resolved" = surviving `calls` edges before merging (one per call
-      // site); "unresolved" = unresolved entries of kind "call". Whole-project (Tier 3)
-      // plugins have no raw references, so total = resolved + unresolved. For the others,
-      // total = call-like raw references seen by extraction (kind "call" or "instantiate"),
-      // which may exceed resolved + unresolved (stoplisted names are neither).
-      const resolvedCalls = kept
-        .filter((e) => e.kind === "calls")
-        .reduce((n, e) => n + (e.meta?.callCount ?? 1), 0);
-      const unresolvedCalls = resolution.unresolved.filter((u) => u.kind === "call").length;
-      const rawCalls = run.extractions
-        .flatMap((e) => e.references)
-        .filter((r) => r.kind === "call" || r.kind === "instantiate").length;
-      references.resolved += resolvedCalls;
-      references.unresolved += unresolvedCalls;
-      references.total +=
-        run.plugin.analyzeProject !== undefined
-          ? resolvedCalls + unresolvedCalls
-          : Math.max(rawCalls, resolvedCalls + unresolvedCalls);
+      // Reference statistics (rules in reference-stats.ts), per language and in total.
+      const byLanguage = referenceCountsByLanguage(run, kept, resolution.unresolved, lookup);
+      for (const [language, counts] of byLanguage) {
+        const entry = perLanguage.get(language) ?? { total: 0, resolved: 0, unresolved: 0 };
+        entry.total += counts.total;
+        entry.resolved += counts.resolved;
+        entry.unresolved += counts.unresolved;
+        perLanguage.set(language, entry);
+        references.total += counts.total;
+        references.resolved += counts.resolved;
+        references.unresolved += counts.unresolved;
+      }
     });
 
     const contains = validateEdges([...structure.edges, ...symbols.edges], nodeIds, false);
@@ -271,7 +285,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       truncated = true;
     }
     unresolved.sort(compareUnresolved);
-    return { dropped, references, edges, unresolved };
+    return { dropped, references, perLanguage, edges, unresolved };
   });
   ctx.check();
 
@@ -282,7 +296,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
   ctx.timings.total = Math.round((performance.now() - startedAt) * 100) / 100;
   const stats = buildStats({
     commitSha: fetched.commitSha,
-    languages: languageStats(facts),
+    languages: languageStats(facts, finished.perLanguage),
     nodes,
     edges: finished.edges,
     references: finished.references,

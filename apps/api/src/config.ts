@@ -143,12 +143,36 @@ export function parseConfig(
   };
 }
 
+/**
+ * Bundle layout: <appRoot>/grammars holds web-tree-sitter.wasm and tree-sitter-<lang>.wasm.
+ * HttpPlatformHandler cannot set environment variables, so when the variables are unset and
+ * the folder exists we default them here (before any grammar loads). Explicit values win.
+ * Returns the names it set. In dev the folder does not exist, so nothing changes.
+ */
+export function applyGrammarDefaults(
+  env: Record<string, string | undefined>,
+  root: string,
+  dirExists: (dir: string) => boolean = existsSync,
+): string[] {
+  const dir = path.join(root, "grammars");
+  const set: string[] = [];
+  if (!dirExists(dir)) return set;
+  for (const name of ["GRAMMAR_DIR", "TREE_SITTER_WASM_DIR"]) {
+    if (env[name] === undefined || env[name] === "") {
+      env[name] = dir;
+      set.push(name);
+    }
+  }
+  return set;
+}
+
 /** Loads `.env` from a path relative to this file (not cwd), then parses process.env. */
 export function loadConfig(): Config {
   const envFile = path.join(layout.baseDir, ".env");
   if (existsSync(envFile)) {
     process.loadEnvFile(envFile); // built into Node 22; does not override existing vars
   }
+  applyGrammarDefaults(process.env, layout.appRoot);
   return parseConfig(process.env, layout.baseDir, layout.appRoot);
 }
 

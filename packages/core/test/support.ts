@@ -16,6 +16,10 @@ import {
 /** Fixtures are located from this file, never from process.cwd(). */
 export const FIXTURES_DIR = fileURLToPath(new URL("../../../fixtures", import.meta.url));
 export const TS_FIXTURE_REPO = join(FIXTURES_DIR, "typescript", "repo");
+export const PY_FIXTURE_REPO = join(FIXTURES_DIR, "python", "repo");
+export const PY_EXPECTED = join(FIXTURES_DIR, "python", "expected-edges.json");
+export const POLYGLOT_FIXTURE_REPO = join(FIXTURES_DIR, "polyglot", "repo");
+export const POLYGLOT_EXPECTED = join(FIXTURES_DIR, "polyglot", "expected-edges.json");
 export const TS_EXPECTED = join(FIXTURES_DIR, "typescript", "expected-edges.json");
 
 /** Creates a temp directory holding `files` (path -> content). Call `cleanup` when done. */

@@ -52,10 +52,49 @@ describe("buildNotices", () => {
       }),
     );
     expect(notices).toHaveLength(3);
-    expect(notices[0]).toContain("Call links are approximate (dashed lines are name matches)");
-    expect(notices[0]).toContain("typescript");
+    expect(notices[0]).toContain(
+      "Call links for TypeScript are approximate (dashed lines are name matches)",
+    );
+    expect(notices[0]).toContain("Only 10%");
     expect(notices[1]).toContain("4 files skipped");
     expect(notices[2]).toContain("python");
+  });
+});
+
+describe("buildNotices per language", () => {
+  const langs = (a: [number, number], b: [number, number]) => ({
+    languages: {
+      typescript: {
+        files: 3,
+        bytes: 10,
+        pluginTier: 3 as const,
+        references: { resolved: a[0], total: a[1] },
+      },
+      python: {
+        files: 2,
+        bytes: 10,
+        pluginTier: 1 as const,
+        references: { resolved: b[0], total: b[1] },
+      },
+    },
+    // The overall rate is high on purpose: only the per-language rate must matter.
+    ...refs(95, 100),
+  });
+
+  it("names only the languages below 50%", () => {
+    expect(buildNotices(stats(langs([90, 100], [3, 10])))).toEqual([
+      "Call links for Python are approximate (dashed lines are name matches).",
+    ]);
+  });
+
+  it("lists several low languages in one notice", () => {
+    expect(buildNotices(stats(langs([1, 10], [3, 10])))).toEqual([
+      "Call links for Python and TypeScript are approximate (dashed lines are name matches).",
+    ]);
+  });
+
+  it("ignores languages without call references and at exactly 50%", () => {
+    expect(buildNotices(stats(langs([0, 0], [5, 10])))).toEqual([]);
   });
 });
 
@@ -70,16 +109,16 @@ describe("ResolutionBanner", () => {
   it("is dismissible and remembers the dismissal per analysis", async () => {
     const a = makeAnalysis({ id: "an_1", stats: low });
     const first = render(<ResolutionBanner analysis={a} />);
-    expect(screen.getByText(/Call links are approximate/)).toBeInTheDocument();
+    expect(screen.getByText(/Call links for TypeScript are approximate/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Dismiss" }));
-    expect(screen.queryByText(/Call links are approximate/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Call links for TypeScript are approximate/)).not.toBeInTheDocument();
     first.unmount();
 
     const second = render(<ResolutionBanner analysis={a} />);
-    expect(screen.queryByText(/Call links are approximate/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Call links for TypeScript are approximate/)).not.toBeInTheDocument();
     second.unmount();
 
     render(<ResolutionBanner analysis={makeAnalysis({ id: "an_2", stats: low })} />);
-    expect(screen.getByText(/Call links are approximate/)).toBeInTheDocument();
+    expect(screen.getByText(/Call links for TypeScript are approximate/)).toBeInTheDocument();
   });
 });

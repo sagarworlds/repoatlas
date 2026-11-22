@@ -1,1 +1,1 @@
-export const packageName = "@repoatlas/lang-python";
+export { isPythonSource, pythonPlugin } from "./plugin.ts";
