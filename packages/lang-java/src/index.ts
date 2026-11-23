@@ -1,1 +1,1 @@
-export const packageName = "@repoatlas/lang-java";
+export { isJavaSource, javaPlugin } from "./plugin.ts";

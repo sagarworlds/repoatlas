@@ -54,7 +54,9 @@ describe("tsconfig overrides", () => {
       paths: { "@a/*": ["src/a/*"] },
     });
     expect(out.noEmit).toBe(true);
-    expect(out.allowJs).toBe(false);
+    expect(out.allowJs).toBe(true);
+    expect(out.checkJs).toBe(false);
+    expect(out.maxNodeModuleJsDepth).toBe(0);
     expect(out.skipLibCheck).toBe(true);
     expect(out.types).toEqual([]);
     expect(out.typeRoots).toBeUndefined();
@@ -90,6 +92,24 @@ describe("tsconfig overrides", () => {
     expect(options.strict).toBe(true);
     expect(options.target).toBe(ts.ScriptTarget.ES2020);
     expect(options.paths).toEqual({ "@x/*": ["./x/*"] });
+  });
+
+  it("reads jsconfig.json when there is no tsconfig.json, and prefers tsconfig.json", () => {
+    const js = readTsconfigOptions(
+      memoryRepo({ "jsconfig.json": '{ "compilerOptions": { "baseUrl": "src" } }' }),
+    );
+    expect(js.tsconfigPath).toBe("jsconfig.json");
+    expect(js.options.baseUrl).toBe("/repo/src");
+    expect(js.options.allowJs).toBe(true);
+
+    const both = readTsconfigOptions(
+      memoryRepo({
+        "jsconfig.json": '{ "compilerOptions": { "strict": true } }',
+        "tsconfig.json": '{ "compilerOptions": { "strict": false } }',
+      }),
+    );
+    expect(both.tsconfigPath).toBe("tsconfig.json");
+    expect(both.options.strict).toBe(false);
   });
 
   it("survives a missing or broken tsconfig", () => {
@@ -152,11 +172,25 @@ describe("workspace packages", () => {
 });
 
 describe("typescriptPlugin.detect", () => {
-  it("claims .ts/.tsx/.mts/.cts but not declaration or JS files", () => {
+  it("claims TypeScript and JavaScript sources but not declaration files", () => {
     const mk = (path: string) => ({ path, bytes: 1 });
     const claimed = typescriptPlugin
-      .detect(["a.ts", "b.tsx", "c.mts", "d.cts", "e.d.ts", "f.js", "g.d.mts", "h.json"].map(mk))
+      .detect(
+        [
+          "a.ts",
+          "b.tsx",
+          "c.mts",
+          "d.cts",
+          "e.d.ts",
+          "f.js",
+          "g.d.mts",
+          "h.json",
+          "i.jsx",
+          "j.mjs",
+          "k.cjs",
+        ].map(mk),
+      )
       .map((f) => f.path);
-    expect(claimed).toEqual(["a.ts", "b.tsx", "c.mts", "d.cts"]);
+    expect(claimed).toEqual(["a.ts", "b.tsx", "c.mts", "d.cts", "f.js", "i.jsx", "j.mjs", "k.cjs"]);
   });
 });

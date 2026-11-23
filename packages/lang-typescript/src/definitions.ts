@@ -7,6 +7,8 @@ import {
 } from "@repoatlas/schema";
 import ts from "typescript";
 import { childNodes } from "./ast-walk.ts";
+import { classifyAssignmentTarget, collectCommonJsExportedNames } from "./js-patterns.ts";
+import { isJavaScriptSource } from "./source-kinds.ts";
 
 export type DefinitionKind = Definition["kind"];
 
@@ -22,6 +24,8 @@ export interface CollectedDefinitions {
 
 interface Entry {
   decl: ts.Node;
+  /** Further AST nodes that stand for the same definition (e.g. the whole assignment). */
+  aliases: ts.Node[];
   localId: string;
   name: string;
   kind: DefinitionKind;
@@ -103,7 +107,9 @@ function oneLine(text: string): string {
 /** Collects the definition nodes of one file (LANGUAGE_PLUGINS section 6, TypeScript). */
 export function collectDefinitions(sf: ts.SourceFile, relPath: string): CollectedDefinitions {
   const entries: Entry[] = [];
+  const isJs = isJavaScriptSource(relPath);
   const exportedNames = collectExportedNames(sf);
+  if (isJs) for (const name of collectCommonJsExportedNames(sf)) exportedNames.add(name);
   const isTest = looksLikeTestPath(relPath);
 
   const lineOf = (pos: number): number => sf.getLineAndCharacterOfPosition(pos).line + 1;
@@ -124,6 +130,7 @@ export function collectDefinitions(sf: ts.SourceFile, relPath: string): Collecte
     if (isTest) meta.isTest = true;
     entries.push({
       decl,
+      aliases: [],
       localId: [...chain, name].join("."),
       name,
       kind,
@@ -150,19 +157,28 @@ export function collectDefinitions(sf: ts.SourceFile, relPath: string): Collecte
     let nextChain = chain;
     let nextParent = parentIndex;
 
-    if (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) {
-      const isClass = ts.isClassDeclaration(node);
-      const name = node.name?.text ?? "default";
+    const binding = ts.isClassExpression(node) ? classExpressionBinding(node) : undefined;
+    const typeDecl =
+      ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)
+        ? node
+        : binding && ts.isClassExpression(node)
+          ? node
+          : undefined;
+    if (typeDecl) {
+      const isClass = !ts.isInterfaceDeclaration(typeDecl);
+      const name = binding?.name ?? typeDecl.name?.text ?? "default";
       const exported =
-        hasModifier(node, ts.SyntaxKind.ExportKeyword) ||
+        binding?.exported === true ||
+        hasModifier(typeDecl, ts.SyntaxKind.ExportKeyword) ||
         (parentIndex === undefined && chain.length === 0 && exportedNames.has(name));
       const meta: NodeMeta = { isExported: exported };
-      if (isClass && hasModifier(node, ts.SyntaxKind.AbstractKeyword)) meta["ts.isAbstract"] = true;
+      if (isClass && hasModifier(typeDecl, ts.SyntaxKind.AbstractKeyword))
+        meta["ts.isAbstract"] = true;
       // `members.pos` is just after the opening "{", so the header ends one character earlier.
-      const signature = sliceText(node.getStart(sf), node.members.pos - 1);
+      const signature = sliceText(typeDecl.getStart(sf), typeDecl.members.pos - 1);
       nextParent = add(
-        node,
-        node,
+        typeDecl,
+        typeDecl,
         name,
         isClass ? "class" : "interface",
         chain,
@@ -170,6 +186,7 @@ export function collectDefinitions(sf: ts.SourceFile, relPath: string): Collecte
         signature,
         meta,
       );
+      if (binding) entries[nextParent]?.aliases.push(...binding.aliases);
       nextChain = [...chain, name];
     } else if (ts.isFunctionDeclaration(node)) {
       // Overload signatures (no body) are skipped; the implementation is the node.
@@ -196,7 +213,7 @@ export function collectDefinitions(sf: ts.SourceFile, relPath: string): Collecte
       }
     } else if (
       (ts.isMethodDeclaration(node) || ts.isConstructorDeclaration(node)) &&
-      ts.isClassDeclaration(node.parent)
+      isDefinedClass(node.parent)
     ) {
       const name = ts.isConstructorDeclaration(node) ? "constructor" : memberName(node.name);
       const callable =
@@ -217,7 +234,7 @@ export function collectDefinitions(sf: ts.SourceFile, relPath: string): Collecte
       }
     } else if (
       ts.isPropertyDeclaration(node) &&
-      ts.isClassDeclaration(node.parent) &&
+      isDefinedClass(node.parent) &&
       functionInitializer(node.initializer)
     ) {
       // `handler = () => {}` as a class member counts as a method.
@@ -270,9 +287,138 @@ export function collectDefinitions(sf: ts.SourceFile, relPath: string): Collecte
       }
     } else if (ts.isModuleDeclaration(node)) {
       nextChain = [...chain, node.name.text];
+    } else if (isJs && chain.length === 0) {
+      const found = visitJsAssignment(node);
+      if (found) {
+        nextChain = found.chain;
+        nextParent = found.parent;
+      }
     }
 
     return { chain: nextChain, parent: nextParent };
+  }
+
+  /** Object-literal members of `Owner.prototype = {...}` that become methods, with their owner. */
+  const prototypeMembers = new Map<ts.Node, number>();
+
+  const ownerIndex = (name: string): number | undefined => {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const e = entries[i];
+      if (e && e.name === name && e.parentIndex === undefined && e.kind !== "method") {
+        return e.kind === "function" || e.kind === "class" ? i : undefined;
+      }
+    }
+    return undefined;
+  };
+
+  /** A method of a prototype-style class: `Owner.prototype.m = function () {}` and friends. */
+  function addPrototypeMethod(
+    decl: ts.Node,
+    spanNode: ts.Node,
+    owner: number,
+    name: string,
+    fn: PrototypeFunction,
+    isStatic: boolean,
+  ): { chain: string[]; parent: number } {
+    const ownerEntry = entries[owner] as Entry;
+    const meta: NodeMeta = { visibility: "public" };
+    if (isStatic) meta.isStatic = true;
+    else meta["js.isPrototypeMethod"] = true;
+    if (hasModifier(fn, ts.SyntaxKind.AsyncKeyword)) meta.isAsync = true;
+    meta.isExported = ownerEntry.meta.isExported === true;
+    const chain = ownerEntry.localId.split(".");
+    const index = add(
+      decl,
+      spanNode,
+      name,
+      "method",
+      chain,
+      owner,
+      sliceText(spanNode.getStart(sf), functionBodyStart(fn, sf)),
+      meta,
+    );
+    return { chain: [...chain, name], parent: index };
+  }
+
+  /**
+   * CommonJS and prototype idioms (JavaScript files only). Returns the chain/parent for the
+   * children of `node` when it declares something, otherwise undefined.
+   */
+  function visitJsAssignment(
+    node: ts.Node,
+  ): { chain: string[]; parent: number | undefined } | undefined {
+    // Members of `Owner.prototype = { m() {}, n: function () {} }`, registered earlier.
+    const protoOwner = prototypeMembers.get(node);
+    if (protoOwner !== undefined) {
+      const fn = ts.isMethodDeclaration(node)
+        ? node
+        : ts.isPropertyAssignment(node)
+          ? functionInitializer(node.initializer)
+          : undefined;
+      const name = memberName((node as ts.MethodDeclaration | ts.PropertyAssignment).name);
+      if (fn && name !== undefined) {
+        const method = addPrototypeMethod(node, node, protoOwner, name, fn, false);
+        return method;
+      }
+      return undefined;
+    }
+
+    if (!ts.isExpressionStatement(node)) return undefined;
+    const expr = node.expression;
+    if (!ts.isBinaryExpression(expr) || expr.operatorToken.kind !== ts.SyntaxKind.EqualsToken) {
+      return undefined;
+    }
+    const target = classifyAssignmentTarget(expr.left);
+    if (!target) return undefined;
+    const fn = functionInitializer(expr.right);
+
+    if (target.kind === "prototype") {
+      const owner = ownerIndex(target.owner);
+      if (owner !== undefined && ts.isObjectLiteralExpression(expr.right)) {
+        for (const prop of expr.right.properties) prototypeMembers.set(prop, owner);
+      }
+      return undefined;
+    }
+    if (!fn) return undefined;
+
+    if (target.kind === "export-member" || target.kind === "module-exports") {
+      const name =
+        target.kind === "export-member"
+          ? target.name
+          : ts.isFunctionExpression(fn) && fn.name
+            ? fn.name.text
+            : "default";
+      const meta: NodeMeta = { isExported: true };
+      if (hasModifier(fn, ts.SyntaxKind.AsyncKeyword)) meta.isAsync = true;
+      // The checker reports `exports.f` (the left side) for export-member and the whole
+      // assignment for `module.exports = function () {}`; callers inside the body find the
+      // assignment as an ancestor. Register both.
+      const index = add(
+        target.kind === "export-member" ? expr.left : expr,
+        node,
+        name,
+        "function",
+        [],
+        undefined,
+        sliceText(node.getStart(sf), functionBodyStart(fn, sf)),
+        meta,
+      );
+      entries[index]?.aliases.push(expr, fn); // `fn`: a call signature's declaration
+      return { chain: [name], parent: index };
+    }
+
+    const owner = ownerIndex(target.owner);
+    if (owner === undefined) return undefined;
+    const method = addPrototypeMethod(
+      expr.left,
+      node,
+      owner,
+      target.name,
+      fn,
+      target.kind === "static-member",
+    );
+    entries[method.parent]?.aliases.push(expr, fn);
+    return method;
   }
 
   // Explicit stack instead of recursion (see ast-walk.ts); pre-order keeps parents first.
@@ -298,6 +444,7 @@ export function collectDefinitions(sf: ts.SourceFile, relPath: string): Collecte
   const definitions: Definition[] = entries.map((e, i) => {
     const localId = localIds[i] ?? e.localId;
     localIdByDecl.set(e.decl, { localId, kind: e.kind });
+    for (const alias of e.aliases) localIdByDecl.set(alias, { localId, kind: e.kind });
     const parentLocalId = e.parentIndex === undefined ? undefined : localIds[e.parentIndex];
     const def: Definition = {
       localId,
@@ -313,14 +460,59 @@ export function collectDefinitions(sf: ts.SourceFile, relPath: string): Collecte
   return { definitions, localIdByDecl };
 }
 
-/** Where the body of an arrow/function expression starts (the signature ends there). */
-function functionBodyStart(
-  fn: ts.ArrowFunction | ts.FunctionExpression,
-  sf: ts.SourceFile,
-): number {
-  if (ts.isArrowFunction(fn) && !ts.isBlock(fn.body)) return fn.equalsGreaterThanToken.getEnd();
-  return fn.body.getStart(sf);
+interface ClassExpressionBinding {
+  name: string;
+  exported: boolean;
+  /** Other nodes the TypeChecker may report as the declaration of the same class. */
+  aliases: ts.Node[];
 }
+
+/**
+ * A class expression only becomes a node when it is bound to a name:
+ * `const A = class {}`, `exports.A = class {}` or `module.exports = class A {}`.
+ */
+function classExpressionBinding(node: ts.ClassExpression): ClassExpressionBinding | undefined {
+  const parent = node.parent;
+  if (
+    ts.isVariableDeclaration(parent) &&
+    parent.initializer === node &&
+    ts.isIdentifier(parent.name)
+  ) {
+    return { name: parent.name.text, exported: false, aliases: [parent] };
+  }
+  if (
+    ts.isBinaryExpression(parent) &&
+    parent.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+    parent.right === node &&
+    ts.isExpressionStatement(parent.parent)
+  ) {
+    const target = classifyAssignmentTarget(parent.left);
+    if (target?.kind === "export-member") {
+      return { name: target.name, exported: true, aliases: [parent.left, parent] };
+    }
+    if (target?.kind === "module-exports") {
+      return { name: node.name?.text ?? "default", exported: true, aliases: [parent] };
+    }
+  }
+  return undefined;
+}
+
+/** A class declaration, or a class expression that became a node (see above). */
+function isDefinedClass(node: ts.Node): boolean {
+  return (
+    ts.isClassDeclaration(node) ||
+    (ts.isClassExpression(node) && classExpressionBinding(node) !== undefined)
+  );
+}
+
+/** Where the body of an arrow/function expression starts (the signature ends there). */
+function functionBodyStart(fn: PrototypeFunction, sf: ts.SourceFile): number {
+  if (ts.isArrowFunction(fn) && !ts.isBlock(fn.body)) return fn.equalsGreaterThanToken.getEnd();
+  return fn.body ? fn.body.getStart(sf) : fn.getEnd();
+}
+
+/** Function-like nodes that can define a method outside a class body. */
+type PrototypeFunction = ts.ArrowFunction | ts.FunctionExpression | ts.MethodDeclaration;
 
 function classMemberMeta(
   node: ts.ClassElement,

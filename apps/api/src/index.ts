@@ -1,7 +1,7 @@
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import { createDefaultRegistry, GitHubFetcher } from "@repoatlas/core";
-import { openStore } from "@repoatlas/store";
+import { createDefaultRegistry, GitHubFetcher, shutdownSharedPool } from "@repoatlas/core";
+import { openExtractionCache, openStore } from "@repoatlas/store";
 import { loadConfig } from "./config.ts";
 import { tmpRoot } from "./jobs/storage.ts";
 import { buildServer } from "./server.ts";
@@ -15,12 +15,28 @@ await rm(tmpRoot(config.dataDir), { recursive: true, force: true });
 await mkdir(tmpRoot(config.dataDir), { recursive: true });
 
 const store = openStore(path.join(config.dataDir, "repoatlas.db"));
+// The extraction cache is an optimization: if it cannot be opened, run without it.
+let extractionCache: ReturnType<typeof openExtractionCache> | undefined;
+let cacheOpenError: unknown;
+try {
+  extractionCache = openExtractionCache(path.join(config.dataDir, "repoatlas.db"), {
+    maxEntries: config.cacheMaxExtractions,
+    maxBytes: config.cacheMaxExtractionBytes,
+  });
+} catch (err) {
+  cacheOpenError = err;
+}
 const { app, jobs } = await buildServer({
   config,
   store,
+  extractionCache,
   fetcher: new GitHubFetcher({ token: config.githubToken }),
   plugins: [...createDefaultRegistry().plugins],
 });
+
+if (cacheOpenError !== undefined) {
+  app.log.warn({ err: cacheOpenError }, "extraction cache disabled: could not open it");
+}
 
 let shuttingDown = false;
 async function shutdown(reason: string, exitCode: number): Promise<void> {
@@ -32,6 +48,8 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
   try {
     await jobs.shutdown(4000); // stop taking jobs, abort running ones (rows stay recoverable)
     await app.close(); // stop accepting HTTP requests
+    await shutdownSharedPool(); // end extraction worker threads
+    extractionCache?.close();
     store.close();
   } catch (err) {
     app.log.error({ err }, "error during shutdown");

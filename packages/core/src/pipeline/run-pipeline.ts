@@ -17,6 +17,7 @@ import { walkRepo } from "../walk/index.ts";
 import { createPipelineContext } from "./context.ts";
 import { createDiagnostics } from "./diagnostics.ts";
 import { type ParseProgress, type PluginRun, runPluginExtraction } from "./extract.ts";
+import type { ExtractionCache } from "./extraction-cache.ts";
 import { readClaimedFiles } from "./read-sources.ts";
 import {
   type ReferenceCounts,
@@ -29,6 +30,7 @@ import { buildSymbolNodes } from "./symbols.ts";
 import { compareCodeUnits } from "./util.ts";
 import { validateEdges } from "./validate.ts";
 import { MAX_EDGES, MAX_NODES } from "./version.ts";
+import type { ExtractPoolSettings } from "./workers/pooled-extractor.ts";
 
 export interface PipelineInput {
   fetched: FetchedRepo;
@@ -38,6 +40,10 @@ export interface PipelineInput {
   signal?: AbortSignal | undefined;
   /** Overrides for the graph size caps (tests). Defaults: 500k nodes, 2M edges. */
   caps?: { maxNodes?: number; maxEdges?: number } | undefined;
+  /** Optional per-file extraction cache (Tier 1 plugins only). Omit to run without one. */
+  extractionCache?: ExtractionCache | undefined;
+  /** Optional worker-thread extraction (docs/ARCHITECTURE). Omit to stay on the main thread. */
+  extractPool?: ExtractPoolSettings | undefined;
 }
 
 function compareEdges(a: GraphEdge, b: GraphEdge): number {
@@ -56,6 +62,16 @@ function compareUnresolved(a: Unresolved, b: Unresolved): number {
     compareCodeUnits(a.name, b.name) ||
     compareCodeUnits(a.kind, b.kind)
   );
+}
+
+/** Sums the cache counts of all plugin runs (plugins that did not use the cache add 0). */
+function cacheTotals(runs: readonly PluginRun[]): { hits: number; misses: number } {
+  const total = { hits: 0, misses: 0 };
+  for (const run of runs) {
+    total.hits += run.cache?.hits ?? 0;
+    total.misses += run.cache?.misses ?? 0;
+  }
+  return total;
 }
 
 /** Per-file facts needed for file nodes and the language statistics. */
@@ -180,7 +196,10 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       const files = loaded.get(plugin.id) ?? [];
       if (files.length === 0) continue;
       runs.push(
-        await runPluginExtraction(plugin, files, walk.files, repo, ctx, diagnostics, progress),
+        await runPluginExtraction(plugin, files, walk.files, repo, ctx, diagnostics, progress, {
+          cache: input.extractionCache,
+          pool: input.extractPool,
+        }),
       );
     }
   });
@@ -257,8 +276,9 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       const resolution = resolutions[i] as SanitizedResolution;
       const { kept, dropped: bad } = validateEdges(resolution.edges, nodeIds, true);
       dropped += bad + resolution.invalidEdges;
-      pluginEdges.push(...kept);
-      unresolved.push(...resolution.unresolved);
+      // Loops, not push(...x): spreading 125k+ items overflows the call stack.
+      for (const edge of kept) pluginEdges.push(edge);
+      for (const entry of resolution.unresolved) unresolved.push(entry);
 
       // Reference statistics (rules in reference-stats.ts), per language and in total.
       const byLanguage = referenceCountsByLanguage(run, kept, resolution.unresolved, lookup);
@@ -306,6 +326,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     pluginErrors: diagnostics.pluginErrors,
     truncated,
     timingsMs: ctx.timings,
+    cache: input.extractionCache ? cacheTotals(runs) : undefined,
   });
 
   return { nodes, edges: finished.edges, rollups, unresolved: finished.unresolved, stats };

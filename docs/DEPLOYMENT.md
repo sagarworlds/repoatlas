@@ -99,14 +99,24 @@ single file, so two Node processes must never run at the same time during a recy
    production `node_modules` for `better-sqlite3` and `typescript`) plus `<out>\site\web.config`
    (DECISIONS D29; `pnpm deploy` is not used).
 3. Tree-sitter files are copied by `scripts/grammars.ts`: `web-tree-sitter.wasm` and each
-   grammar `.wasm` go to `<out>\app\grammars`, and the Python query files to
-   `<out>\app\queries\python`. `server.js` starts with a banner that sets `GRAMMAR_DIR`,
-   `TREE_SITTER_WASM_DIR` and `PYTHON_QUERIES_DIR` from its own location when they are
+   grammar `.wasm` (`tree-sitter-python.wasm`, `tree-sitter-go.wasm`, `tree-sitter-java.wasm`)
+   go to `<out>\app\grammars`, and the query files to `<out>\app\queries\python`, `\go` and
+   `\java`. `server.js` starts with a banner that sets `GRAMMAR_DIR`,
+   `TREE_SITTER_WASM_DIR`, `PYTHON_QUERIES_DIR`, `GO_QUERIES_DIR` and `JAVA_QUERIES_DIR` from its own location when they are
    unset (the Python plugin reads its queries at import time, before `loadConfig()`;
    `applyGrammarDefaults` in `apps/api/src/config.ts` is a secondary default). No
    `web.config` environment variables are needed. A new language adds one line to
    `GRAMMAR_FILES` (and to `DATA_DIRS` if it reads query files). `verify-bundle.ts` parses
    Python through the bundle from an unrelated cwd.
+   The extraction worker is a second bundle entry, `apps/api/dist/extract-worker.js`, copied
+   next to `server.js` (the whole `apps/api/dist` folder is copied: do not narrow that to
+   `server.js`). It is located through `import.meta.url`, never the working directory. Without
+   it the API still works, single-threaded. `verify-bundle.ts` runs Python on 2 worker
+   threads and Go, Java and JavaScript through the bundle.
+   Optional `.env` settings: `EXTRACT_WORKERS` (unset = auto: CPUs-1, at most 8, only for
+   repos of 100+ files; `0` or `1` = main thread only), `CACHE_MAX_EXTRACTIONS` (default
+   200000) and `CACHE_MAX_EXTRACTION_BYTES` (default 524288000) for the per-file extraction
+   cache stored in `repoatlas.db`.
 4. Copy `<out>\app` to `C:\NodeApps\repoatlas\app`, then recycle the app pool.
 
 Write this as a Node script (`scripts/make-deploy-bundle.ts`), not a shell script.

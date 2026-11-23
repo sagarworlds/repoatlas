@@ -96,6 +96,39 @@ describe("per-language resolution", () => {
   });
 });
 
+describe("five-language targets", () => {
+  const languages = {
+    typescript: { files: 1, bytes: 1, pluginTier: 3, references: { total: 100, resolved: 90 } },
+    javascript: { files: 1, bytes: 1, pluginTier: 3, references: { total: 100, resolved: 89 } },
+    python: { files: 1, bytes: 1, pluginTier: 1, references: { total: 100, resolved: 65 } },
+    go: { files: 1, bytes: 1, pluginTier: 1, references: { total: 100, resolved: 75 } },
+    java: { files: 1, bytes: 1, pluginTier: 1, references: { total: 100, resolved: 74 } },
+  } as const;
+  const stats = makeStats({
+    languages,
+    references: { total: 500, resolved: 393, unresolved: 107 },
+  });
+
+  it("applies 90 / 90 / 65 / 75 / 75 and marks PASS or WARN per language", () => {
+    const text = formatStats(stats, META);
+    expect(text).toContain("typescript: 90 / 100 (90.0%), target 90% PASS");
+    expect(text).toContain("javascript: 89 / 100 (89.0%), target 90% WARN");
+    expect(text).toContain("python: 65 / 100 (65.0%), target 65% PASS");
+    expect(text).toContain("go: 75 / 100 (75.0%), target 75% PASS");
+    expect(text).toContain("java: 74 / 100 (74.0%), target 75% WARN");
+    const reasons = evaluateQuality(stats).reasons.join(" ");
+    expect(reasons).toContain("javascript resolution rate");
+    expect(reasons).toContain("java resolution rate");
+    expect(reasons).not.toContain("go resolution rate");
+  });
+
+  it("prints the name-match verdict", () => {
+    expect(formatStats(stats, META)).toContain("name-match share of edges: 5.0%, limit 20% PASS");
+    const high = makeStats({ edgesByConfidence: { exact: 10, inferred: 0, "name-match": 10 } });
+    expect(formatStats(high, META)).toContain("limit 20% WARN");
+  });
+});
+
 describe("evaluateQuality", () => {
   it("applies the language-specific target of the dominant language", () => {
     const python = makeStats({

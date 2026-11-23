@@ -1,7 +1,13 @@
 export type { TypeScriptProjectInfo } from "./analyze.ts";
 export { analyzeTypeScriptProject, computeProjectInfo } from "./analyze.ts";
 export { externalTargetFor, isNodeBuiltin, looksLikeNpmName } from "./module-names.ts";
-export { isTypeScriptSource, typescriptPlugin } from "./plugin.ts";
+export { typescriptPlugin } from "./plugin.ts";
+export {
+  isJavaScriptSource,
+  isSupportedSource,
+  isTypeScriptSource,
+  languageOfSource,
+} from "./source-kinds.ts";
 export { applyCompilerOverrides, readTsconfigOptions } from "./tsconfig.ts";
 export {
   buildWorkspacePackages,

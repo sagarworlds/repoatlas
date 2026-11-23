@@ -6,6 +6,8 @@ import ts from "typescript";
 export const VIRTUAL_ROOT = "/repo";
 
 /** "src/a.ts" -> "/repo/src/a.ts" */
+const IMPLEMENTATION_EXTENSIONS = [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"];
+
 export function toVirtualPath(rel: string): string {
   return rel === "" ? VIRTUAL_ROOT : `${VIRTUAL_ROOT}/${rel}`;
 }
@@ -32,12 +34,21 @@ export function createVirtualHost(repo: RepoView, options: ts.CompilerOptions): 
   const dirCache = new Map<string, boolean>();
   const sourceCache = new Map<string, ts.SourceFile | undefined>();
 
+  const isRepoFile = (rel: string): boolean => repo.exists(rel) && !repo.isDir(rel);
+  // `foo.d.ts` next to `foo.js` (or foo.ts) is hidden from module resolution, so imports and
+  // calls reach the implementation file, which is the graph node (a .d.ts has no symbols).
+  const hasImplementationSibling = (rel: string): boolean => {
+    if (!rel.endsWith(".d.ts")) return false;
+    const base = rel.slice(0, -".d.ts".length);
+    return IMPLEMENTATION_EXTENSIONS.some((ext) => isRepoFile(base + ext));
+  };
+
   const fileExists = (p: string): boolean => {
     const cached = fileCache.get(p);
     if (cached !== undefined) return cached;
     let result = false;
     const rel = toRepoPath(p);
-    if (rel !== undefined) result = repo.exists(rel) && !repo.isDir(rel);
+    if (rel !== undefined) result = isRepoFile(rel) && !hasImplementationSibling(rel);
     else if (isLibPath(p)) result = readLib(p) !== undefined;
     fileCache.set(p, result);
     return result;

@@ -198,6 +198,7 @@ export interface AnalysisStats {
   parseErrorFiles: number;
   droppedInvalidEdges: number;
   pluginErrors: { plugin: string; stage: string; message: string }[];  // a plugin failing never fails the analysis
+  cache?: { hits: number; misses: number };  // per-file extraction cache (present when a cache was used)
   truncated?: boolean;                 // node/edge cap hit
   timingsMs: Record<string, number>;   // per pipeline phase
 }

@@ -21,6 +21,8 @@ export interface StatsInput {
   pluginErrors: AnalysisStats["pluginErrors"];
   truncated: boolean;
   timingsMs: Record<string, number>;
+  /** Extraction cache hits/misses; undefined when no cache was used. */
+  cache?: { hits: number; misses: number } | undefined;
 }
 
 export function buildStats(input: StatsInput): AnalysisStats {
@@ -50,5 +52,6 @@ export function buildStats(input: StatsInput): AnalysisStats {
     timingsMs: input.timingsMs,
   };
   if (input.truncated) stats.truncated = true;
+  if (input.cache) stats.cache = input.cache;
   return stats;
 }

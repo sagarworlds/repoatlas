@@ -55,12 +55,19 @@ export function disambiguateLocalIds(
   items: readonly { localId: string; startLine: number }[],
 ): string[] {
   const seen = new Set<string>();
+  // Next suffix to try per "@line" base, so many same-line duplicates stay linear.
+  const nextSuffix = new Map<string, number>();
   return items.map(({ localId, startLine }) => {
     let candidate = localId;
     if (seen.has(candidate)) {
-      candidate = `${localId}@${startLine}`;
-      let n = 2;
-      while (seen.has(candidate)) candidate = `${localId}@${startLine}_${n++}`;
+      const base = `${localId}@${startLine}`;
+      candidate = base;
+      if (seen.has(candidate)) {
+        let n = nextSuffix.get(base) ?? 2;
+        candidate = `${base}_${n}`;
+        while (seen.has(candidate)) candidate = `${base}_${++n}`;
+        nextSuffix.set(base, n + 1);
+      }
     }
     seen.add(candidate);
     return candidate;

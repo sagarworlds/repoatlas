@@ -5,6 +5,29 @@ import { applyGrammarDefaults, parseConfig, resolveLayout } from "./config.ts";
 const base = path.resolve("/base");
 
 describe("parseConfig", () => {
+  it("reads the extraction cache caps (defaults 200000 rows, 500 MB)", () => {
+    const defaults = parseConfig({}, base);
+    expect(defaults.cacheMaxExtractions).toBe(200_000);
+    expect(defaults.cacheMaxExtractionBytes).toBe(524_288_000);
+    const custom = parseConfig(
+      { CACHE_MAX_EXTRACTIONS: "50", CACHE_MAX_EXTRACTION_BYTES: "1000" },
+      base,
+    );
+    expect(custom.cacheMaxExtractions).toBe(50);
+    expect(custom.cacheMaxExtractionBytes).toBe(1000);
+  });
+
+  it("reads EXTRACT_WORKERS (unset = auto, 0 and 1 allowed, junk rejected)", () => {
+    expect(parseConfig({}, base).extractWorkers).toBeUndefined();
+    expect(parseConfig({ EXTRACT_WORKERS: "" }, base).extractWorkers).toBeUndefined();
+    expect(parseConfig({ EXTRACT_WORKERS: "4" }, base).extractWorkers).toBe(4);
+    expect(parseConfig({ EXTRACT_WORKERS: "0" }, base).extractWorkers).toBe(0);
+    expect(parseConfig({ EXTRACT_WORKERS: "1" }, base).extractWorkers).toBe(1);
+    expect(() => parseConfig({ EXTRACT_WORKERS: "-1" }, base)).toThrow();
+    expect(() => parseConfig({ EXTRACT_WORKERS: "many" }, base)).toThrow();
+    expect(() => parseConfig({ EXTRACT_WORKERS: "2.5" }, base)).toThrow();
+  });
+
   it("applies defaults", () => {
     const c = parseConfig({}, base);
     expect(c.port).toBe(4000);

@@ -31,8 +31,18 @@ export const EXAMPLES: readonly ExampleRepo[] = [
     description: "Command line interfaces for Python",
   },
   {
+    repo: "expressjs/express",
+    language: "javascript",
+    description: "Fast, minimalist web framework for Node.js",
+  },
+  {
     repo: "spf13/cobra",
     language: "go",
     description: "A library for modern CLI apps in Go",
+  },
+  {
+    repo: "google/gson",
+    language: "java",
+    description: "Java library for JSON serialization",
   },
 ];

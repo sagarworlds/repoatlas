@@ -17,7 +17,9 @@ export interface ImportResolver {
   resolve(specifier: string, fromFile: string): ResolvedImport;
 }
 
-// Non-TypeScript files a relative import may point at (allowJs is off until M4).
+// Files a relative import may point at when TypeScript resolution found nothing (e.g. a
+// .json file, or a .js file the program did not know about). allowJs is on, so TypeScript
+// itself already resolves .js/.jsx/.mjs/.cjs and index.js; this is only a safety net.
 const FALLBACK_EXTENSIONS = ["", ".js", ".jsx", ".mjs", ".cjs", ".json"];
 
 function joinPosix(fromFile: string, specifier: string): string | undefined {

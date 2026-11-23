@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { copyGrammars, GRAMMAR_FILES, renderEnvDefaultsBanner } from "./grammars.ts";
+import { copyGrammars, DATA_DIRS, GRAMMAR_FILES, renderEnvDefaultsBanner } from "./grammars.ts";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -15,6 +15,9 @@ describe("copyGrammars", () => {
       const files = readdirSync(path.join(dir, "grammars")).sort();
       expect(files).toEqual(GRAMMAR_FILES.map((g) => g.file).sort());
       expect(files).toContain("web-tree-sitter.wasm");
+      for (const lang of ["python", "go", "java"]) {
+        expect(files).toContain(`tree-sitter-${lang}.wasm`);
+      }
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -41,5 +44,16 @@ describe("renderEnvDefaultsBanner", () => {
     expect(banner).toContain('"TREE_SITTER_WASM_DIR","grammars"');
     expect(banner).toContain('"X_DIR","queries/x"');
     expect(banner).toContain('(process.env[name] ?? "") === ""');
+  });
+
+  it("defaults a queries folder for every language plugin", () => {
+    expect(DATA_DIRS.map((d) => d.env).sort()).toEqual([
+      "GO_QUERIES_DIR",
+      "JAVA_QUERIES_DIR",
+      "PYTHON_QUERIES_DIR",
+    ]);
+    const banner = renderEnvDefaultsBanner();
+    expect(banner).toContain("queries/go");
+    expect(banner).toContain("queries/java");
   });
 });

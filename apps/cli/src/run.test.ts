@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type RunDeps, run } from "./run.ts";
 
 const FIXTURE = fileURLToPath(new URL("../../../fixtures/typescript/repo", import.meta.url));
+const PY_FIXTURE = fileURLToPath(new URL("../../../fixtures/python/repo", import.meta.url));
 const SECRET_TOKEN = "ghp_SECRET_TOKEN_VALUE_123";
 
 function capture() {
@@ -40,12 +41,29 @@ async function runCli(argv: string[], deps: RunDeps = {}) {
     stderr: io.stderr,
     tmpRoot: workDir,
     env: { GITHUB_TOKEN: SECRET_TOKEN },
+    // Never touch the real cache file from tests.
+    extractionCache: null,
     ...deps,
   });
   return { code, ...io.text() };
 }
 
 describe("run", () => {
+  it("uses the extraction cache file on the second run and skips it with --no-cache", async () => {
+    const env = { CLI_CACHE_FILE: path.join(workDir, "cache.db") };
+    const first = await runCli(["--local", PY_FIXTURE], { env, extractionCache: undefined });
+    expect(first.code).toBe(0);
+    expect(first.out).toMatch(/hits: 0, misses: [1-9]/);
+    const second = await runCli(["--local", PY_FIXTURE], { env, extractionCache: undefined });
+    expect(second.out).toMatch(/hits: [1-9][0-9]*, misses: [0-9]+/);
+    const off = await runCli(["--local", PY_FIXTURE, "--no-cache"], {
+      env,
+      extractionCache: undefined,
+    });
+    expect(off.code).toBe(0);
+    expect(off.out).not.toContain("Extraction cache");
+  }, 60_000);
+
   it("prints a report for a local directory", async () => {
     const { code, out, err } = await runCli(["--local", FIXTURE]);
     expect(code).toBe(0);

@@ -14,6 +14,7 @@ import { collectDefinitions } from "./definitions.ts";
 import { type EdgeExtraction, extractFileEdges, type NodeRef } from "./edges.ts";
 import { collectImports, type ImportSite } from "./imports.ts";
 import { createImportResolver } from "./resolve-imports.ts";
+import { languageOfSource } from "./source-kinds.ts";
 import { readTsconfigOptions } from "./tsconfig.ts";
 import { createVirtualHost, toVirtualPath } from "./virtual-host.ts";
 import {
@@ -173,7 +174,7 @@ export async function analyzeTypeScriptProject(
       // Unreadable file: keep an empty extraction so the file still appears in the graph.
       extractions.push({
         file: path,
-        language: "typescript",
+        language: languageOfSource(path),
         definitions: [],
         imports: [],
         references: [],
@@ -191,7 +192,7 @@ export async function analyzeTypeScriptProject(
       // file and flag it through parseErrors.
       extractions.push({
         file: path,
-        language: "typescript",
+        language: languageOfSource(path),
         definitions: [],
         imports: [],
         references: [],
@@ -206,7 +207,7 @@ export async function analyzeTypeScriptProject(
     files.push({ path, sf });
     extractions.push({
       file: path,
-      language: "typescript",
+      language: languageOfSource(path),
       definitions: collected.definitions,
       imports: sites.map((s): RawImport => s.raw),
       // References are resolved right here (edges below), so the raw list stays empty.

@@ -292,3 +292,23 @@ describe("cancellation and limits", () => {
     expect(result.nodes.length).toBeGreaterThan(0);
   });
 });
+
+describe("large plugin results", () => {
+  it("accepts a plugin that returns far more than 125k edges (no spread overflow)", async () => {
+    const dir = await tempRepo(THREE_FILES);
+    const edges = Array.from({ length: 160_000 }, (_, i) =>
+      callEdge("sym:a.py#f", "sym:b.py#f", i + 1),
+    );
+    const unresolved = Array.from({ length: 160_000 }, (_, i) => ({
+      file: "a.py",
+      kind: "call" as const,
+      name: `x${i}`,
+      line: i + 1,
+    }));
+    const plugin = fakePlugin({
+      resolve: async () => ({ ...emptyResolution(), edges, unresolved }),
+    });
+    const result = await analyzeDir(dir, [plugin]);
+    expect(result.edges.length).toBeGreaterThan(0);
+  });
+});

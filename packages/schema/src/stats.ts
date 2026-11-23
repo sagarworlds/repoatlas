@@ -30,6 +30,8 @@ export const AnalysisStatsSchema = z.object({
   pluginErrors: z.array(z.object({ plugin: z.string(), stage: z.string(), message: z.string() })),
   truncated: z.boolean().optional(),
   timingsMs: z.record(z.string(), z.number()),
+  // Per-file extraction cache counters; absent when the analysis ran without a cache.
+  cache: z.object({ hits: z.number().int(), misses: z.number().int() }).optional(),
 });
 export type AnalysisStats = z.infer<typeof AnalysisStatsSchema>;
 

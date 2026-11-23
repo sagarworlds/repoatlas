@@ -4,11 +4,11 @@
 
 | Language | Package | Tier | Status | Fixture | Notes |
 |---|---|---|---|---|---|
-| TypeScript | lang-typescript | 3 (TS compiler API) | implemented (M1) | fixtures/typescript | `allowJs` off until M4; workspace packages resolved through injected `paths`; TS 6 pinned (DECISIONS D6) |
-| JavaScript | lang-typescript | 3 (`allowJs`) | planned (M4) | fixtures/javascript | CommonJS + ESM |
+| TypeScript | lang-typescript | 3 (TS compiler API) | implemented (M1) | fixtures/typescript | `allowJs` on since M4; workspace packages resolved through injected `paths`; TS 6 pinned (DECISIONS D6) |
+| JavaScript | lang-typescript | 3 (`allowJs`) | implemented (M4) | fixtures/javascript, fixtures/polyglot | CommonJS + ESM + JSX, `jsconfig.json` fallback; see section 6 and DECISIONS D37 |
 | Python | lang-python | 1 (tree-sitter) | implemented (M3) | fixtures/python, fixtures/polyglot | `.py` only (`.pyi` stubs skipped); src-layout roots from `pyproject.toml`/`setup.cfg`; stdlib grouped as `ext:pypi:stdlib`; see section 6 and DECISIONS D30-D36 |
-| Go | lang-go | 1 | planned (M4) | fixtures/go | |
-| Java | lang-java | 1 | planned (M4) | fixtures/java | |
+| Go | lang-go | 1 | implemented (M4) | fixtures/go, fixtures/polyglot | package-per-directory scope, `mod:go:` nodes, receiver methods, stdlib as `ext:go:stdlib`; see section 6 and DECISIONS D38 |
+| Java | lang-java | 1 | implemented (M4) | fixtures/java, fixtures/polyglot | FQN resolution, overloads by argument types, `ext:maven:` externals; see section 6 and DECISIONS D39 |
 | C# | lang-csharp | 1 | planned (M5) | fixtures/csharp | |
 | Rust | lang-rust | 1 | planned (M5) | fixtures/rust | |
 | PHP | lang-php | 1 | planned (M5) | fixtures/php | |
@@ -196,9 +196,9 @@ Plugins also produce, per file, a **binding map** `localName → nodeId` used by
 ### TypeScript / JavaScript (Tier 3, `lang-typescript`)
 - Build one `ts.Program` with all `.ts/.tsx/.mts/.cts` (+ `.js/.jsx/.mjs/.cjs` with
   `allowJs`) files. Read the root `tsconfig.json` with `ts.parseJsonConfigFileContent`
-  but override: `noEmit: true`, `skipLibCheck: true`, `allowJs: false` (M1; becomes
-  `true` in M4), `types: []`, drop `plugins`, `typeRoots`, `outDir`, `rootDir`. If no
-  tsconfig, use sane defaults. Respect `paths`/`baseUrl` (`paths` stay relative to the
+  but override: `noEmit: true`, `skipLibCheck: true`, `allowJs: true`, `checkJs: false`,
+  `maxNodeModuleJsDepth: 0`, `types: []`, drop `plugins`, `typeRoots`, `outDir`, `rootDir`.
+  If there is no `tsconfig.json`, read `jsconfig.json`; if neither exists, use sane defaults. Respect `paths`/`baseUrl` (`paths` stay relative to the
   config file that declared them).
 - `node_modules` does not exist (we never install), so bare imports resolve to nothing →
   emit `ext:npm:{package}` (strip subpaths: `lodash/fp` → `lodash`; keep scope `@a/b`).
@@ -219,6 +219,16 @@ Plugins also produce, per file, a **binding map** `localName → nodeId` used by
   files, split by tsconfig project references or directory chunks.
 - Definitions: classes, interfaces, functions, methods, and `const x = () => {}` /
   `const x = function` as `function` nodes. Object-literal methods: skip in v1.
+- JavaScript (M4, DECISIONS D37): `.js/.jsx/.mjs/.cjs` go through the same program; nodes
+  carry `language: "javascript"`. `require("x")` with a literal argument is an import (a
+  non-literal argument records nothing). `module.exports = ...`, `exports.x = ...` and
+  `Owner.prototype.m = ...` define nodes (prototype methods: kind `method`,
+  `meta["js.isPrototypeMethod"]`; function constructors: kind `function`). JSDoc
+  `import("./x")` types count as type-only imports. `index.js` and extension-less requires
+  resolve. A `foo.d.ts` next to `foo.js` is hidden from resolution so edges reach `foo.js`.
+  A call whose callee is a call result is attributed through the resolved signature. Calls
+  through untyped parameters and `any` receivers make no edge and are not counted; the
+  JS target (90%) counts only references the checker can attribute.
 
 ### Python (`lang-python`)
 - Package roots: repo root, `src/`, and any dir listed in `pyproject.toml`
@@ -267,6 +277,24 @@ Plugins also produce, per file, a **binding map** `localName → nodeId` used by
   a single `ext:go:stdlib` node (put the package path in the edge's `meta.package`) to
   avoid hundreds of nodes. Third-party → `ext:go:{module path}` (first 3 segments for github.com).
 - `_test.go` → `isTest`.
+- Implementation notes (M4, see DECISIONS D38):
+  - Internal imports are `file -> mod:go:{import path}` edges; `import "C"` is `ext:go:cgo`.
+    Third-party externals use the longest `require`d prefix of go.mod. `replace` and `go.work`
+    are ignored. Generated files (`*.pb.go`, `*_gen.go`, `zz_generated*`) are skipped.
+  - Test files see their package's non-test scope; `foo_test` packages are separate scopes.
+  - Structs and named types are kind `class` (`meta["go.kind"] = "alias"` for non-struct
+    types), interfaces kind `interface` (`meta["go.methods"]`). Methods: id `Receiver.Method`,
+    `meta["go.receiver"]`; struct field types in `meta["go.fields"]`; package-level variable
+    hints in file `meta["go.vars"]`; file meta `go.package`, `go.test`, `go.generated`, `go.cgo`.
+  - Embedding is an `extends` edge; promoted methods resolve through it (`inferred`).
+    Interface-typed receivers fall back to name-match (1-3 candidates); no `implements` edges.
+  - `receiverTypeHint` grammar: `T`, `pkg.T`, `call:NewT` (first result type of the callee
+    signature `func NewT(...) *T`), chains `base/f:field/m:Method`, `pkgvar:x`, alternatives
+    `a|b` (must all lead to the same type), and `local:` (a local variable of unknown type).
+  - A local variable or parameter shadows an imported package and a package function: such
+    bare calls are dropped and such receivers are never bound to the import.
+  - Builtin calls, conversions to predeclared types, and calls through function values are
+    not references. Go stoplist: builtins plus common stdlib method names.
 
 ### Java (`lang-java`)
 - Package from `package` declaration; class FQN = `package.Class`. Index by FQN.
@@ -279,6 +307,27 @@ Plugins also produce, per file, a **binding map** `localName → nodeId` used by
   names use argument count to pick; if still ambiguous → edges to all, `name-match`.
 - External: packages not found in repo → `ext:maven:{first two or three segments}`
   (e.g. `org.springframework`). `java.*`/`javax.*` → `ext:maven:jdk`.
+- Implementation notes (M4, see DECISIONS D39):
+  - Reads `pom.xml`, `build.gradle` and `build.gradle.kts` (never executed) for declared
+    groupIds; an external is named by the longest declared groupId prefix, else `jdk` for
+    `java`, `javax`, `jdk`, `sun`, `com.sun`, `org.w3c`, `org.xml`, else 2 segments (3 for
+    `com.github`, `io.github`, `com.google.cloud`, `org.apache.commons`).
+  - Type lookup order: member types of enclosing classes, single imports, same package,
+    wildcard imports, implicit `java.lang`, fully qualified. Several modules declaring one FQN:
+    the class nearest to the caller wins.
+  - Meta keys: file `java.package`; definitions `java.params`, `java.varargs`,
+    `java.paramTypes`, `java.returns`, `java.kind` (enum, record, annotation), `java.annotations`,
+    `java.abstract`, `java.fields`; file `java.callArgs`, `java.anonSupers`, `java.localTypes`.
+    Constructors: `isConstructor`, id `User.User`. Enum constants, fields, lambdas, anonymous
+    and local classes are not nodes.
+  - Overloads: arity first, then argument types (exact 4, widen 3, box 2, maybe 1, no 0); a
+    varargs method loses ties only when a fixed-arity method certainly fits; undecided pairs
+    are `name-match` (2-3) or `ambiguous`. Call chains follow declared return types.
+  - Silent (external, not counted): `Object` methods, members that may come from an external
+    or unresolved super type, records, enum methods, Lombok-style annotations, receivers
+    whose declared type is outside the repository. A miss on a fully known class and a missed
+    `super.m()` are unresolved, never name-matched.
+  - Wildcard imports make an `imports` edge only for files that use them. No module nodes.
 
 ### C# (`lang-csharp`)
 - **Namespaces are not tied to files.** Build namespace → types map across the repo

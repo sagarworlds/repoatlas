@@ -107,7 +107,8 @@ export function buildWorkspacePackages(repo: RepoView): WorkspacePackages {
   return packages;
 }
 
-const TS_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".d.ts"];
+// Declaration files come last: an implementation file next to its .d.ts wins.
+const TS_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".d.ts"];
 
 function withExtensions(base: string): string[] {
   const out = TS_EXTENSIONS.map((ext) => `${base}${ext}`);

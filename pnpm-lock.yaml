@@ -323,6 +323,12 @@ importers:
 
   packages/core:
     dependencies:
+      '@repoatlas/lang-go':
+        specifier: workspace:*
+        version: link:../lang-go
+      '@repoatlas/lang-java':
+        specifier: workspace:*
+        version: link:../lang-java
       '@repoatlas/lang-python':
         specifier: workspace:*
         version: link:../lang-python

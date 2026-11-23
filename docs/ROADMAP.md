@@ -109,14 +109,14 @@ when deployed on IIS, including after an app pool recycle.
 
 ## M4 — JavaScript, Go, Java
 
-- [ ] JavaScript through `lang-typescript` (`allowJs`, CommonJS `require`/`module.exports`,
+- [x] JavaScript through `lang-typescript` (`allowJs`, CommonJS `require`/`module.exports`,
       ESM, `index.js` resolution) + `fixtures/javascript`.
-- [ ] `lang-go` (go.mod, package-per-directory scope, receiver methods, stdlib grouping)
+- [x] `lang-go` (go.mod, package-per-directory scope, receiver methods, stdlib grouping)
       + fixture.
-- [ ] `lang-java` (packages, imports incl. wildcard/static, nested classes, overload
+- [x] `lang-java` (packages, imports incl. wildcard/static, nested classes, overload
       disambiguation by arg count) + fixture.
-- [ ] Worker-thread pool for extraction (keep single-thread fallback for debugging).
-- [ ] Per-file extraction cache by content hash.
+- [x] Worker-thread pool for extraction (keep single-thread fallback for debugging).
+- [x] Per-file extraction cache by content hash.
 
 **Acceptance:** each language meets its TESTING §4 target on 2 real repos.
 

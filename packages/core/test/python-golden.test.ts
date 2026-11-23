@@ -72,13 +72,29 @@ describe("pipeline over the polyglot fixture", () => {
   });
 
   it("has separate reference statistics per language", () => {
-    const { typescript, python: py } = polyglot.stats.languages;
-    expect(typescript?.pluginTier).toBe(3);
-    expect(py?.pluginTier).toBe(1);
-    expect(typescript?.references?.total).toBeGreaterThan(0);
-    expect(py?.references?.total).toBeGreaterThan(0);
-    const sum = (typescript?.references?.total ?? 0) + (py?.references?.total ?? 0);
+    const languages = polyglot.stats.languages;
+    const expectedTiers = [
+      ["typescript", 3],
+      ["javascript", 3],
+      ["python", 1],
+      ["go", 1],
+      ["java", 1],
+    ] as const;
+    let sum = 0;
+    for (const [language, tier] of expectedTiers) {
+      const entry = languages[language];
+      expect(entry?.pluginTier, language).toBe(tier);
+      expect(entry?.references?.total ?? 0, language).toBeGreaterThan(0);
+      sum += entry?.references?.total ?? 0;
+    }
     expect(polyglot.stats.references.total).toBe(sum);
+  });
+
+  it("analyzes all five languages in one run", () => {
+    const fileLanguages = new Set(
+      polyglot.nodes.filter((n) => n.kind === "file").map((n) => n.language),
+    );
+    expect([...fileLanguages].sort()).toEqual(["go", "java", "javascript", "python", "typescript"]);
   });
 
   it("is deterministic across runs", async () => {

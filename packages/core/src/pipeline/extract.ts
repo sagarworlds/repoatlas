@@ -6,15 +6,21 @@ import type {
   RepoView,
   SourceFile,
 } from "@repoatlas/plugin-api";
-import { type FileExtraction, FileExtractionSchema } from "@repoatlas/schema";
+import { type FileExtraction, FileExtractionSchema, type LanguageId } from "@repoatlas/schema";
 import { languageOfPath } from "../detect/index.ts";
 import { AnalysisError } from "../errors.ts";
 import type { PipelineContext } from "./context.ts";
 import type { Diagnostics } from "./diagnostics.ts";
+import type { ExtractionCache } from "./extraction-cache.ts";
+import { type CacheCounts, isCacheable, planCache } from "./extraction-cache-step.ts";
 import type { LoadedFile } from "./read-sources.ts";
 import { mapLimit } from "./util.ts";
+import { acceptExtraction } from "./workers/accept.ts";
+import { type ExtractPoolSettings, openPooledExtractor } from "./workers/pooled-extractor.ts";
 
 const EXTRACT_CONCURRENCY = 8;
+/** Files kept queued per worker thread, so a worker never waits for the main thread. */
+const POOL_QUEUE_PER_WORKER = 3;
 
 /** What one plugin produced for its files. */
 export interface PluginRun {
@@ -29,6 +35,19 @@ export interface PluginRun {
    * core calls `plugin.resolve`.
    */
   resolution: unknown;
+  /** Extraction cache hits and misses; present only when the cache was used for this plugin. */
+  cache?: CacheCounts;
+}
+
+/** Optional services for extraction (everything works without them). */
+export interface ExtractOptions {
+  /** Per-file extraction cache; used for Tier 1 plugins only. */
+  cache?: ExtractionCache | undefined;
+  /**
+   * Worker-thread extraction for Tier 1 plugins. Undefined (the default, also in tests) keeps
+   * everything on the main thread, which is also the debugging path.
+   */
+  pool?: ExtractPoolSettings | undefined;
 }
 
 /** Shared progress counter for the "parsing" phase. */
@@ -71,7 +90,42 @@ function validateExtractions(
   return valid;
 }
 
-/** Per-file extraction with bounded concurrency; one failing file never fails the run. */
+/**
+ * Extracts one file with the plugin. Returns undefined (and counts a skip) when the plugin
+ * fails or returns invalid output; only cancellation and timeouts are re-thrown.
+ */
+async function extractFile(
+  plugin: LanguagePlugin,
+  file: LoadedFile,
+  language: LanguageId | undefined,
+  info: PluginProjectInfo,
+  diagnostics: Diagnostics,
+): Promise<FileExtraction | undefined> {
+  if (language === undefined) {
+    diagnostics.addSkip("extract-error");
+    return undefined;
+  }
+  const source: SourceFile = {
+    path: file.path,
+    bytes: file.bytes,
+    content: file.content,
+    language,
+  };
+  try {
+    const accepted = acceptExtraction(await plugin.extract(source, info), file.path);
+    if (accepted) return accepted;
+    diagnostics.addSkip("invalid-extraction");
+  } catch (err) {
+    if (isAbortError(err)) throw err;
+    diagnostics.addSkip("extract-error");
+  }
+  return undefined;
+}
+
+/**
+ * Per-file extraction with bounded concurrency; one failing file never fails the run.
+ * Steps: (1) one batched cache lookup, (2) extract the misses, (3) one batched cache store.
+ */
 async function extractPerFile(
   plugin: LanguagePlugin,
   files: LoadedFile[],
@@ -79,33 +133,49 @@ async function extractPerFile(
   ctx: PipelineContext,
   diagnostics: Diagnostics,
   progress: ParseProgress,
-): Promise<{ files: LoadedFile[]; extractions: FileExtraction[] }> {
-  const outcomes = await mapLimit(files, EXTRACT_CONCURRENCY, async (file) => {
-    ctx.check();
-    const language = languageOfPath(file.path) ?? plugin.languages[0];
-    let extraction: FileExtraction | undefined;
-    if (language === undefined) {
-      diagnostics.addSkip("extract-error");
-    } else {
-      const source: SourceFile = {
-        path: file.path,
-        bytes: file.bytes,
-        content: file.content,
-        language,
-      };
-      try {
-        const parsed = FileExtractionSchema.safeParse(await plugin.extract(source, info));
-        if (parsed.success && parsed.data.file === file.path) extraction = parsed.data;
-        else diagnostics.addSkip("invalid-extraction");
-      } catch (err) {
-        if (isAbortError(err)) throw err;
-        diagnostics.addSkip("extract-error");
-      }
-    }
-    progress.done++;
-    ctx.progress("parsing", progress.done, progress.total);
-    return extraction;
+  options: ExtractOptions,
+): Promise<{ files: LoadedFile[]; extractions: FileExtraction[]; cache?: CacheCounts }> {
+  const languages = files.map((f) => languageOfPath(f.path) ?? plugin.languages[0]);
+  const plan =
+    options.cache && isCacheable(plugin)
+      ? planCache(plugin, files, languages, options.cache, ctx, diagnostics)
+      : undefined;
+
+  // Files that need real extraction go to worker threads when configured (and worthwhile);
+  // otherwise, or if the pool breaks, they are extracted on the main thread.
+  const mainThread = (file: LoadedFile, language: LanguageId | undefined) =>
+    extractFile(plugin, file, language, info, diagnostics);
+  const pooled = openPooledExtractor({
+    settings: options.pool,
+    plugin,
+    info,
+    fileCount: plan ? plan.counts().misses : files.length,
+    signal: ctx.signal,
+    diagnostics,
+    fallback: mainThread,
   });
+  const concurrency = pooled ? pooled.workerCount * POOL_QUEUE_PER_WORKER : EXTRACT_CONCURRENCY;
+
+  let outcomes: (FileExtraction | undefined)[];
+  try {
+    outcomes = await mapLimit(files, concurrency, async (file, i) => {
+      ctx.check();
+      let extraction = plan?.hit(i);
+      if (extraction === undefined) {
+        extraction = await (pooled
+          ? pooled.extract(file, languages[i])
+          : mainThread(file, languages[i]));
+        ctx.check(); // a cancelled pool answers "aborted"; stop instead of counting it
+      }
+      progress.done++;
+      ctx.progress("parsing", progress.done, progress.total);
+      return extraction;
+    });
+  } finally {
+    pooled?.close();
+  }
+  plan?.storeFresh(outcomes);
+
   const kept: LoadedFile[] = [];
   const extractions: FileExtraction[] = [];
   outcomes.forEach((extraction, i) => {
@@ -114,7 +184,7 @@ async function extractPerFile(
       extractions.push(extraction);
     }
   });
-  return { files: kept, extractions };
+  return plan ? { files: kept, extractions, cache: plan.counts() } : { files: kept, extractions };
 }
 
 /** Runs prepare + extraction (+ whole-project analysis) for one plugin. */
@@ -126,6 +196,7 @@ export async function runPluginExtraction(
   ctx: PipelineContext,
   diagnostics: Diagnostics,
   progress: ParseProgress,
+  options: ExtractOptions = {},
 ): Promise<PluginRun> {
   const projectCtx: ProjectContext = {
     files: files.map((f) => ({ path: f.path, bytes: f.bytes })),
@@ -162,11 +233,19 @@ export async function runPluginExtraction(
       diagnostics.addPluginError(plugin.id, "analyze", err);
       ctx.check();
       // Fall through to per-file extraction with an empty resolution.
-      const fallback = await extractPerFile(plugin, files, info, ctx, diagnostics, progress);
+      const fallback = await extractPerFile(
+        plugin,
+        files,
+        info,
+        ctx,
+        diagnostics,
+        progress,
+        options,
+      );
       return { plugin, info, ...fallback, resolution: {} };
     }
   }
 
-  const result = await extractPerFile(plugin, files, info, ctx, diagnostics, progress);
+  const result = await extractPerFile(plugin, files, info, ctx, diagnostics, progress, options);
   return { plugin, info, ...result, resolution: undefined };
 }

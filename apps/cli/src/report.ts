@@ -105,6 +105,13 @@ function perLanguageLines(stats: AnalysisStats): string[] {
   return lines.sort();
 }
 
+/** Name-match share of edges against the 20% limit (PASS/WARN). */
+function nameMatchLine(stats: AnalysisStats, edgeTotal: number): string {
+  const nameMatch = stats.edgesByConfidence["name-match"] ?? 0;
+  const verdict = edgeTotal === 0 || nameMatch / edgeTotal <= NAME_MATCH_LIMIT ? "PASS" : "WARN";
+  return `name-match share of edges: ${pct(nameMatch, edgeTotal)}, limit 20% ${verdict}`;
+}
+
 /** Formats the human-readable report printed by the CLI. */
 export function formatStats(stats: AnalysisStats, meta: ReportMeta): string {
   const lines: string[] = [];
@@ -149,7 +156,7 @@ export function formatStats(stats: AnalysisStats, meta: ReportMeta): string {
       `resolved: ${refs.resolved} / ${refs.total} (${pct(refs.resolved, refs.total)})`,
       `unresolved: ${refs.unresolved}`,
       ...perLanguageLines(stats),
-      `name-match share of edges: ${pct(stats.edgesByConfidence["name-match"] ?? 0, edgeTotal)}`,
+      nameMatchLine(stats, edgeTotal),
     ]),
   );
 
@@ -179,6 +186,12 @@ export function formatStats(stats: AnalysisStats, meta: ReportMeta): string {
       Object.entries(stats.timingsMs).map(([k, v]) => `${k}: ${Math.round(v)}`),
     ),
   );
+
+  if (stats.cache) {
+    lines.push(
+      ...section("Extraction cache", [`hits: ${stats.cache.hits}, misses: ${stats.cache.misses}`]),
+    );
+  }
 
   const verdict = evaluateQuality(stats);
   lines.push("");

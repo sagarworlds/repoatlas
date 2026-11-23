@@ -59,6 +59,16 @@ Golden tests for Python and the polyglot fixture live in `packages/core/test/pyt
 (`lang-python` does not depend on `core`). `ExpectedGraph` also accepts `expectLanguages` and
 `noCrossLanguageEdges`. Engine and extractor tests need the real WASM grammar; they run offline.
 
+Fixtures present: `fixtures/typescript`, `fixtures/python`, `fixtures/javascript`,
+`fixtures/go`, `fixtures/java` and `fixtures/polyglot` (TS, JS, Python, Go and Java in one repo;
+asserts per-language stats and no cross-language edges). Golden tests live in
+`packages/core/test/*-golden.test.ts` and run through `createDefaultRegistry()`. Other M4
+tests: `worker-pool.test.ts` (the pool gives the same graph as the main thread, crash and
+timeout handling, memory), `extraction-cache.test.ts` (hit/miss counts, identical output,
+corrupt rows), `packages/lang-go/test/shadowing.test.ts`,
+`packages/lang-java/test/resolve/review-fixes.test.ts`, and a linear-time test for
+`disambiguateLocalIds`.
+
 ## 3. Real-repo smoke runs (manual, not CI)
 
 `pnpm analyze https://github.com/<owner>/<repo>` prints stats. Keep a list in
@@ -70,7 +80,11 @@ timing and notable failures. Suggested small repos: one per language, < 300 file
 - **Resolution rate** = resolved / total references (per language), where total =
   resolved + unresolved internal-resolvable references; externals, builtins and calls through
   parameters are excluded (DECISIONS D32). Targets for v1:
-  TS ≥ 90%, Go/Java/C# ≥ 75%, Python/PHP/Rust ≥ 65%, Ruby/C++ ≥ 50%.
+  TS/JS ≥ 90%, Go/Java/C# ≥ 75%, Python/PHP/Rust ≥ 65%, Ruby/C++ ≥ 50%. For untyped
+  JavaScript the rate counts only references the TypeScript checker can attribute (calls
+  through untyped parameters, `any` receivers, `.d.ts`-typed APIs and test globals are in
+  neither number; DECISIONS D37). A language with only a handful of references (for example
+  5 TS calls in a JS repo) is not a meaningful sample.
 - **Confidence mix**: share of `name-match` edges should be < 20% outside Ruby/C++.
 - **Dropped invalid edges** must be 0 in fixtures (it indicates an ID bug).
 - **Time**: a 1,000-file repo should analyze in < 60 s on a 4-core machine (excluding download).

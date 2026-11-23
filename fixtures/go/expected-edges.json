@@ -1,0 +1,713 @@
+{
+  "mustContainNodes": [
+    {
+      "id": "mod:go:example.com/shop/cmd/shop",
+      "kind": "module"
+    },
+    {
+      "id": "mod:go:example.com/shop/internal/model",
+      "kind": "module"
+    },
+    {
+      "id": "mod:go:example.com/shop/internal/service",
+      "kind": "module"
+    },
+    {
+      "id": "mod:go:example.com/shop/internal/util",
+      "kind": "module"
+    },
+    {
+      "id": "mod:go:example.com/shop/internal/plugins",
+      "kind": "module"
+    },
+    {
+      "id": "ext:go:stdlib",
+      "kind": "external"
+    },
+    {
+      "id": "ext:go:github.com/google/uuid",
+      "kind": "external"
+    },
+    {
+      "id": "file:cmd/shop/main.go",
+      "kind": "file"
+    },
+    {
+      "id": "file:internal/service/service_test.go",
+      "kind": "file",
+      "meta": {
+        "isTest": true
+      }
+    },
+    {
+      "id": "file:internal/service/external_test.go",
+      "kind": "file",
+      "meta": {
+        "isTest": true
+      }
+    },
+    {
+      "id": "file:internal/util/broken.go",
+      "kind": "file"
+    },
+    {
+      "id": "sym:cmd/shop/main.go#main",
+      "kind": "function"
+    },
+    {
+      "id": "sym:cmd/shop/helpers.go#worker",
+      "kind": "function"
+    },
+    {
+      "id": "sym:cmd/shop/helpers.go#process",
+      "kind": "function"
+    },
+    {
+      "id": "sym:cmd/shop/helpers.go#report",
+      "kind": "function"
+    },
+    {
+      "id": "sym:cmd/shop/helpers.go#cleanup",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/model/user.go#User",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/model/user.go#NewUser",
+      "kind": "function",
+      "meta": {
+        "isExported": true
+      }
+    },
+    {
+      "id": "sym:internal/model/user.go#User.Validate",
+      "kind": "method",
+      "meta": {
+        "go.receiver": "User",
+        "isExported": true
+      }
+    },
+    {
+      "id": "sym:internal/model/user.go#User.Display",
+      "kind": "method",
+      "meta": {
+        "go.receiver": "User"
+      }
+    },
+    {
+      "id": "sym:internal/model/user.go#normalize",
+      "kind": "function",
+      "meta": {
+        "isExported": false,
+        "visibility": "private"
+      }
+    },
+    {
+      "id": "sym:internal/model/order.go#ID",
+      "kind": "class",
+      "meta": {
+        "go.kind": "alias"
+      }
+    },
+    {
+      "id": "sym:internal/model/order.go#Line",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/model/order.go#Order",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/model/order.go#NewOrder",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/model/order.go#Order.Total",
+      "kind": "method"
+    },
+    {
+      "id": "sym:internal/model/order.go#Order.Summary",
+      "kind": "method"
+    },
+    {
+      "id": "sym:internal/model/order.go#User.Orders",
+      "kind": "method",
+      "meta": {
+        "go.receiver": "User"
+      }
+    },
+    {
+      "id": "sym:internal/model/admin.go#Admin",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/model/admin.go#Admin.Promote",
+      "kind": "method",
+      "meta": {
+        "go.receiver": "Admin"
+      }
+    },
+    {
+      "id": "sym:internal/plugins/register.go#init",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/plugins/register.go#Registered",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/service/server.go#Server",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/service/server.go#AuditedServer",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/service/server.go#NewServer",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/service/server.go#Server.Start",
+      "kind": "method",
+      "meta": {
+        "go.receiver": "Server"
+      }
+    },
+    {
+      "id": "sym:internal/service/server.go#Server.listen",
+      "kind": "method",
+      "meta": {
+        "visibility": "private"
+      }
+    },
+    {
+      "id": "sym:internal/service/server.go#Server.serveLoop",
+      "kind": "method"
+    },
+    {
+      "id": "sym:internal/service/server.go#Server.Stop",
+      "kind": "method"
+    },
+    {
+      "id": "sym:internal/service/server.go#AuditedServer.Record",
+      "kind": "method",
+      "meta": {
+        "go.receiver": "AuditedServer"
+      }
+    },
+    {
+      "id": "sym:internal/service/client.go#Client",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/service/client.go#Session",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/service/client.go#init",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/service/client.go#NewClient",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/service/client.go#Client.Do",
+      "kind": "method"
+    },
+    {
+      "id": "sym:internal/service/client.go#Server.Shutdown",
+      "kind": "method",
+      "meta": {
+        "go.receiver": "Server"
+      }
+    },
+    {
+      "id": "sym:internal/service/client.go#Fetch",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/service/client.go#Greet",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/service/handler.go#Handler",
+      "kind": "interface"
+    },
+    {
+      "id": "sym:internal/service/handler.go#Closer",
+      "kind": "interface"
+    },
+    {
+      "id": "sym:internal/service/handler.go#HandlerCloser",
+      "kind": "interface"
+    },
+    {
+      "id": "sym:internal/service/handler.go#LoggingHandler",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/service/handler.go#LoggingHandler.Serve",
+      "kind": "method"
+    },
+    {
+      "id": "sym:internal/service/handler.go#LoggingHandler.format",
+      "kind": "method"
+    },
+    {
+      "id": "sym:internal/service/handler.go#EchoHandler",
+      "kind": "class"
+    },
+    {
+      "id": "sym:internal/service/handler.go#EchoHandler.Serve",
+      "kind": "method",
+      "meta": {
+        "go.receiver": "EchoHandler"
+      }
+    },
+    {
+      "id": "sym:internal/service/handler.go#Dispatch",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/service/handler.go#init",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/strings.go#Shout",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/strings.go#Join",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/strings.go#normalize",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/strings.go#Map",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/strings.go#Ping",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/ids.go#NewID",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/ids.go#Pong",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/broken.go#Fine",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/util/broken.go#AlsoFine",
+      "kind": "function"
+    },
+    {
+      "id": "sym:internal/service/service_test.go#TestServerStop",
+      "kind": "function",
+      "meta": {
+        "isTest": true
+      }
+    },
+    {
+      "id": "sym:internal/service/service_test.go#TestDispatch",
+      "kind": "function",
+      "meta": {
+        "isTest": true
+      }
+    },
+    {
+      "id": "sym:internal/service/external_test.go#TestExternalClient",
+      "kind": "function",
+      "meta": {
+        "isTest": true
+      }
+    }
+  ],
+  "mustContainEdges": [
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/model/user.go#NewUser",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/model/order.go#NewOrder",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/model/order.go#Order.Summary",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/service/client.go#Server.Shutdown",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/service/server.go#NewServer",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/service/server.go#Server.Start",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/util/strings.go#Join",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/util/ids.go#NewID",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/util/strings.go#Map",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:cmd/shop/helpers.go#worker",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:cmd/shop/helpers.go#cleanup",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/helpers.go#worker",
+      "dst": "sym:cmd/shop/helpers.go#process",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:cmd/shop/helpers.go#process",
+      "dst": "sym:cmd/shop/helpers.go#report",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/model/user.go#User.Display",
+      "dst": "sym:internal/model/user.go#User.Validate",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/model/user.go#User.Display",
+      "dst": "sym:internal/model/user.go#normalize",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/model/order.go#Order.Summary",
+      "dst": "sym:internal/model/order.go#Order.Total",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/model/order.go#User.Orders",
+      "dst": "sym:internal/model/user.go#User.Validate",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/model/admin.go#Admin.Promote",
+      "dst": "sym:internal/model/user.go#User.Display",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/server.go#Server.Start",
+      "dst": "sym:internal/util/strings.go#Shout",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/server.go#Server.Start",
+      "dst": "sym:internal/service/server.go#Server.listen",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/server.go#Server.listen",
+      "dst": "sym:internal/service/server.go#Server.serveLoop",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/server.go#Server.serveLoop",
+      "dst": "sym:internal/service/server.go#Server.Stop",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/server.go#AuditedServer.Record",
+      "dst": "sym:internal/service/server.go#Server.Stop",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/client.go#Server.Shutdown",
+      "dst": "sym:internal/service/server.go#Server.Stop",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/client.go#Fetch",
+      "dst": "sym:internal/service/client.go#NewClient",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/client.go#Fetch",
+      "dst": "sym:internal/model/user.go#NewUser",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/client.go#Fetch",
+      "dst": "sym:internal/service/client.go#Client.Do",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/client.go#Greet",
+      "dst": "sym:internal/model/user.go#User.Display",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/handler.go#LoggingHandler.Serve",
+      "dst": "sym:internal/service/handler.go#LoggingHandler.format",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/util/strings.go#Shout",
+      "dst": "sym:internal/util/strings.go#normalize",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/util/strings.go#Ping",
+      "dst": "sym:internal/util/ids.go#Pong",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/util/ids.go#Pong",
+      "dst": "sym:internal/util/strings.go#Ping",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/util/broken.go#Fine",
+      "dst": "sym:internal/util/strings.go#Shout",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/util/broken.go#AlsoFine",
+      "dst": "sym:internal/util/strings.go#Ping",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/service_test.go#TestServerStop",
+      "dst": "sym:internal/service/server.go#NewServer",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/service_test.go#TestServerStop",
+      "dst": "sym:internal/service/server.go#Server.Stop",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/service_test.go#TestDispatch",
+      "dst": "sym:internal/service/handler.go#Dispatch",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/external_test.go#TestExternalClient",
+      "dst": "sym:internal/service/client.go#NewClient",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/service/external_test.go#TestExternalClient",
+      "dst": "sym:internal/service/client.go#Client.Do",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:internal/model/admin.go#Admin",
+      "dst": "sym:internal/model/user.go#User",
+      "kind": "extends",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:internal/service/server.go#AuditedServer",
+      "dst": "sym:internal/service/server.go#Server",
+      "kind": "extends",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:internal/service/client.go#Session",
+      "dst": "sym:internal/model/user.go#User",
+      "kind": "extends",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:internal/service/handler.go#HandlerCloser",
+      "dst": "sym:internal/service/handler.go#Handler",
+      "kind": "extends",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:internal/service/handler.go#HandlerCloser",
+      "dst": "sym:internal/service/handler.go#Closer",
+      "kind": "extends",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:cmd/shop/main.go",
+      "dst": "mod:go:example.com/shop/internal/model",
+      "kind": "imports"
+    },
+    {
+      "src": "file:cmd/shop/main.go",
+      "dst": "mod:go:example.com/shop/internal/plugins",
+      "kind": "imports"
+    },
+    {
+      "src": "file:cmd/shop/main.go",
+      "dst": "mod:go:example.com/shop/internal/service",
+      "kind": "imports"
+    },
+    {
+      "src": "file:cmd/shop/main.go",
+      "dst": "mod:go:example.com/shop/internal/util",
+      "kind": "imports"
+    },
+    {
+      "src": "file:cmd/shop/main.go",
+      "dst": "ext:go:stdlib",
+      "kind": "imports"
+    },
+    {
+      "src": "file:internal/service/server.go",
+      "dst": "mod:go:example.com/shop/internal/util",
+      "kind": "imports"
+    },
+    {
+      "src": "file:internal/service/server.go",
+      "dst": "ext:go:stdlib",
+      "kind": "imports"
+    },
+    {
+      "src": "file:internal/service/client.go",
+      "dst": "mod:go:example.com/shop/internal/model",
+      "kind": "imports"
+    },
+    {
+      "src": "file:internal/service/external_test.go",
+      "dst": "mod:go:example.com/shop/internal/service",
+      "kind": "imports"
+    },
+    {
+      "src": "file:internal/util/ids.go",
+      "dst": "ext:go:github.com/google/uuid",
+      "kind": "imports"
+    },
+    {
+      "src": "file:internal/util/strings.go",
+      "dst": "ext:go:stdlib",
+      "kind": "imports"
+    },
+    {
+      "src": "file:internal/model/user.go",
+      "dst": "ext:go:stdlib",
+      "kind": "imports"
+    }
+  ],
+  "mustNotContainEdges": [
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "ext:go:stdlib",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:internal/util/ids.go#NewID",
+      "dst": "ext:go:github.com/google/uuid",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:internal/model/user.go#User.Display",
+      "dst": "sym:internal/util/strings.go#normalize",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:internal/util/strings.go#Shout",
+      "dst": "sym:internal/model/user.go#normalize",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:internal/util/strings.go#Join",
+      "dst": "sym:internal/util/strings.go#Join",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:cmd/shop/main.go#main",
+      "dst": "sym:internal/service/server.go#Server.Stop",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:internal/service/handler.go#LoggingHandler",
+      "dst": "sym:internal/service/handler.go#Handler",
+      "kind": "implements"
+    },
+    {
+      "src": "sym:internal/service/handler.go#EchoHandler",
+      "dst": "sym:internal/service/handler.go#Handler",
+      "kind": "implements"
+    },
+    {
+      "src": "file:cmd/shop/main.go",
+      "dst": "ext:go:github.com/google/uuid",
+      "kind": "imports"
+    }
+  ],
+  "mustBeUnresolved": [],
+  "parseErrorFiles": ["internal/util/broken.go"],
+  "minResolutionRate": 0.8
+}

@@ -1,0 +1,95 @@
+/**
+ * Names that are never name-matched in Go, added to the shared stoplist in plugin-api
+ * (`get`, `set`, `add`, ...). Builtin functions, plus method names of very common standard
+ * library types and interfaces (io.Reader, error, Stringer, sync.Mutex, context, ...), which
+ * would otherwise match unrelated user methods.
+ */
+export const GO_STOPLIST: readonly string[] = [
+  // builtin functions
+  "append",
+  "cap",
+  "clear",
+  "close",
+  "complex",
+  "copy",
+  "delete",
+  "imag",
+  "len",
+  "make",
+  "max",
+  "min",
+  "new",
+  "panic",
+  "print",
+  "println",
+  "real",
+  "recover",
+  // error, fmt.Stringer, io, bufio
+  "Error",
+  "String",
+  "Close",
+  "Write",
+  "WriteString",
+  "WriteByte",
+  "Read",
+  "ReadString",
+  "Flush",
+  "Seek",
+  "Scan",
+  // sort.Interface and containers
+  "Len",
+  "Less",
+  "Swap",
+  // sync, context, errors
+  "Lock",
+  "Unlock",
+  "RLock",
+  "RUnlock",
+  "Wait",
+  "Done",
+  "Err",
+  "Value",
+  "Unwrap",
+  "Is",
+  "As",
+  // testing.T and log
+  "Fatal",
+  "Fatalf",
+  "Errorf",
+  "Logf",
+  "Skip",
+  "Helper",
+  "Cleanup",
+  "Run",
+  // JSON / text marshalling
+  "MarshalJSON",
+  "UnmarshalJSON",
+  "MarshalText",
+  "UnmarshalText",
+];
+
+/** Predeclared (universe scope) types: a reference to one is never a repository symbol. */
+export const GO_PREDECLARED_TYPES: ReadonlySet<string> = new Set([
+  "any",
+  "bool",
+  "byte",
+  "comparable",
+  "complex64",
+  "complex128",
+  "error",
+  "float32",
+  "float64",
+  "int",
+  "int8",
+  "int16",
+  "int32",
+  "int64",
+  "rune",
+  "string",
+  "uint",
+  "uint8",
+  "uint16",
+  "uint32",
+  "uint64",
+  "uintptr",
+]);

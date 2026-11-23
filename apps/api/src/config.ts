@@ -42,6 +42,11 @@ const ConfigSchema = z.object({
   MAX_FILE_BYTES: intFromEnv(1_048_576),
   ANALYSIS_TIMEOUT_MS: intFromEnv(600_000),
   CACHE_MAX_ANALYSES: intFromEnv(200),
+  // Per-file extraction cache caps (rows, and bytes of JSON). Least recently used rows go first.
+  CACHE_MAX_EXTRACTIONS: intFromEnv(200_000),
+  CACHE_MAX_EXTRACTION_BYTES: intFromEnv(524_288_000),
+  // Worker threads for extraction: unset = auto (CPUs - 1, at most 8), 0 or 1 = main thread only.
+  EXTRACT_WORKERS: z.coerce.number().int().min(0).max(64).optional(),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
   // Number of trusted proxy hops ("1" = one IIS/ARR hop), "loopback", or "false"/"0" (off).
   // A plain "true" is rejected on purpose: it would trust a client-supplied leftmost
@@ -82,6 +87,10 @@ export interface Config {
   maxFileBytes: number;
   analysisTimeoutMs: number;
   cacheMaxAnalyses: number;
+  cacheMaxExtractions: number;
+  cacheMaxExtractionBytes: number;
+  /** EXTRACT_WORKERS; undefined means "auto". 0 or 1 keeps extraction on the main thread. */
+  extractWorkers: number | undefined;
   /** Single allowed browser origin for CORS. */
   corsOrigin: string;
   /** Fastify trustProxy value: false (off), a hop count, or "loopback". */
@@ -124,6 +133,9 @@ export function parseConfig(
     maxFileBytes: raw.MAX_FILE_BYTES,
     analysisTimeoutMs: raw.ANALYSIS_TIMEOUT_MS,
     cacheMaxAnalyses: raw.CACHE_MAX_ANALYSES,
+    cacheMaxExtractions: raw.CACHE_MAX_EXTRACTIONS,
+    cacheMaxExtractionBytes: raw.CACHE_MAX_EXTRACTION_BYTES,
+    extractWorkers: raw.EXTRACT_WORKERS,
     corsOrigin: raw.CORS_ORIGIN,
     trustProxy: parseTrustProxy(raw.TRUST_PROXY),
     rateLimit: {

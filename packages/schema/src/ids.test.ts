@@ -98,4 +98,13 @@ describe("parseId", () => {
     expect(parseId("nope")).toBeUndefined();
     expect(parseId("sym:no-hash")).toBeUndefined();
   });
+
+  it("disambiguates many same-line duplicates in linear time", () => {
+    const items = Array.from({ length: 30_000 }, () => ({ localId: "A.m", startLine: 1 }));
+    const started = Date.now();
+    const ids = disambiguateLocalIds(items);
+    expect(Date.now() - started).toBeLessThan(2000);
+    expect(new Set(ids).size).toBe(items.length);
+    expect(ids.slice(0, 4)).toEqual(["A.m", "A.m@1", "A.m@1_2", "A.m@1_3"]);
+  });
 });

@@ -71,6 +71,8 @@ export async function runAnalysisJob(
       onResolved: (info) => store.updateAnalysis(analysisId, { commitSha: info.commitSha }),
       onProgress,
       signal,
+      extractionCache: env.deps.extractionCache,
+      extractPool: { workers: config.extractWorkers ?? "auto" },
     });
     if (outcome.status !== "analyzed") {
       throw new AnalysisError("INTERNAL", "Analysis was unexpectedly skipped.");

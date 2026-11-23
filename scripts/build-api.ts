@@ -1,4 +1,6 @@
-// Bundles apps/api/src/index.ts into apps/api/dist/server.js with esbuild.
+// Bundles apps/api/src/index.ts into apps/api/dist/server.js with esbuild, plus the extraction
+// worker thread entry into apps/api/dist/extract-worker.js (it must sit next to server.js:
+// packages/core/src/pipeline/workers/entry-location.ts looks for it there).
 // Run: pnpm exec tsx scripts/build-api.ts
 import { rm } from "node:fs/promises";
 import path from "node:path";
@@ -24,12 +26,27 @@ export const CJS_BANNER = [
   renderEnvDefaultsBanner(),
 ].join("\n");
 
+/** Files esbuild writes into apps/api/dist (each also gets a .map file). */
+export const API_OUTPUT_FILES = ["server.js", "extract-worker.js"] as const;
+
 export async function buildApi(root: string = repoRoot): Promise<string> {
-  const outfile = path.join(root, "apps", "api", "dist", "server.js");
-  await rm(path.dirname(outfile), { recursive: true, force: true });
+  const outdir = path.join(root, "apps", "api", "dist");
+  await rm(outdir, { recursive: true, force: true });
   await build({
-    entryPoints: [path.join(root, "apps", "api", "src", "index.ts")],
-    outfile,
+    // Two self-contained bundles (no code splitting): the key is the output file name.
+    entryPoints: {
+      server: path.join(root, "apps", "api", "src", "index.ts"),
+      "extract-worker": path.join(
+        root,
+        "packages",
+        "core",
+        "src",
+        "pipeline",
+        "workers",
+        "worker-entry.ts",
+      ),
+    },
+    outdir,
     bundle: true,
     platform: "node",
     format: "esm",
@@ -40,7 +57,7 @@ export async function buildApi(root: string = repoRoot): Promise<string> {
     banner: { js: CJS_BANNER },
     logLevel: "info",
   });
-  return outfile;
+  return path.join(outdir, "server.js");
 }
 
 if (

@@ -10,7 +10,7 @@ import path from "node:path";
 import { build } from "esbuild";
 import { CJS_BANNER, repoRoot } from "./build-api.ts";
 import { findPackageDir } from "./bundle-deps.ts";
-import { GRAMMAR_FILES } from "./grammars.ts";
+import { DATA_DIRS, GRAMMAR_FILES } from "./grammars.ts";
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = ""): void {
@@ -45,16 +45,22 @@ async function waitForHealth(base: string, child: ChildProcess): Promise<boolean
 }
 
 /**
- * Builds scripts/smoke-entry.ts into a temporary file next to server.js (so the layout
- * logic sees the real bundle folders), runs it from an unrelated cwd with NO grammar
- * environment variables, and deletes it again.
+ * Builds one scripts/<entry> into a temporary file next to server.js (so the layout logic sees
+ * the real bundle folders), runs it from an unrelated cwd with NO grammar environment
+ * variables, and deletes it again. Returns the exit status and the last output line.
  */
-async function smokeParsePython(out: string, work: string): Promise<void> {
+async function runBundledSmoke(
+  out: string,
+  entry: string,
+  outName: string,
+  extraEnv: NodeJS.ProcessEnv,
+  work: string,
+): Promise<{ status: number | null; line: string }> {
   const distDir = path.join(out, "app", "apps", "api", "dist");
-  const smokeJs = path.join(distDir, "smoke-verify.js");
+  const smokeJs = path.join(distDir, outName);
   try {
     await build({
-      entryPoints: [path.join(repoRoot, "scripts", "smoke-entry.ts")],
+      entryPoints: [path.join(repoRoot, "scripts", entry)],
       outfile: smokeJs,
       bundle: true,
       platform: "node",
@@ -71,26 +77,91 @@ async function smokeParsePython(out: string, work: string): Promise<void> {
       banner: { js: CJS_BANNER },
       logLevel: "silent",
     });
-    const env: NodeJS.ProcessEnv = { ...process.env, DATA_DIR: path.join(work, "smoke-data") };
+    const env: NodeJS.ProcessEnv = {
+      ...process.env,
+      DATA_DIR: path.join(work, "smoke-data"),
+      ...extraEnv,
+    };
     delete env.GRAMMAR_DIR;
     delete env.TREE_SITTER_WASM_DIR;
     const run = spawnSync(process.execPath, [smokeJs], {
       cwd: path.parse(tmpdir()).root,
       env,
       encoding: "utf8",
-      timeout: 60000,
+      timeout: 120000,
     });
     const line = (run.stdout ?? "").trim().split("\n").pop()?.trim() ?? "";
-    check(
-      "bundled web-tree-sitter parses Python via bundle layout (unrelated cwd)",
-      run.status === 0,
-      line === "" ? (run.stderr ?? "").slice(0, 300) : line,
-    );
-  } catch (err) {
-    check("bundled Python smoke test", false, err instanceof Error ? err.message : String(err));
+    return { status: run.status, line: line === "" ? (run.stderr ?? "").slice(0, 300) : line };
   } finally {
     await rm(smokeJs, { force: true });
     await rm(`${smokeJs}.map`, { force: true });
+  }
+}
+
+async function smokeParsePython(out: string, work: string): Promise<void> {
+  try {
+    const run = await runBundledSmoke(out, "smoke-entry.ts", "smoke-verify.js", {}, work);
+    check(
+      "bundled web-tree-sitter parses Python via bundle layout (unrelated cwd)",
+      run.status === 0,
+      run.line,
+    );
+  } catch (err) {
+    check("bundled Python smoke test", false, err instanceof Error ? err.message : String(err));
+  }
+}
+
+/**
+ * Proves the bundle really extracts on worker threads: analyzes a generated Python + TypeScript
+ * directory with EXTRACT_WORKERS=2 (threads started from the bundled extract-worker.js) and
+ * requires the same graph as the main-thread run and a pool that completed the Python files.
+ */
+async function smokeWorkerPool(out: string, work: string): Promise<void> {
+  const workerJs = path.join(out, "app", "apps", "api", "dist", "extract-worker.js");
+  check("extract-worker.js exists next to server.js", existsSync(workerJs));
+  try {
+    const run = await runBundledSmoke(
+      out,
+      "smoke-pool-entry.ts",
+      "smoke-pool-verify.js",
+      { EXTRACT_WORKERS: "2" },
+      work,
+    );
+    check(
+      "bundled server code extracts Python on 2 worker threads with the same graph as 1 thread",
+      run.status === 0,
+      run.line,
+    );
+  } catch (err) {
+    check(
+      "bundled worker pool smoke test",
+      false,
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+}
+
+/**
+ * Proves the Go, Java and JavaScript plugins work inside the bundle: grammars are loaded from
+ * app/grammars and queries from app/queries (found by the banner, no env variables set by the
+ * caller), on the main thread and on 2 worker threads, with the same graph.
+ */
+async function smokeLanguages(out: string, work: string): Promise<void> {
+  try {
+    const run = await runBundledSmoke(
+      out,
+      "smoke-langs-entry.ts",
+      "smoke-langs-verify.js",
+      {},
+      work,
+    );
+    check(
+      "bundled Go, Java and JavaScript analyze (grammars from app/grammars), main thread = 2 workers",
+      run.status === 0,
+      run.line,
+    );
+  } catch (err) {
+    check("bundled language smoke test", false, err instanceof Error ? err.message : String(err));
   }
 }
 
@@ -148,7 +219,15 @@ async function main(): Promise<void> {
     for (const g of GRAMMAR_FILES) {
       check(`grammars/${g.file} present`, existsSync(path.join(grammarsDir, g.file)));
     }
+    for (const d of DATA_DIRS) {
+      check(
+        `${d.dest} present (${d.env})`,
+        existsSync(path.join(out, "app", ...d.dest.split("/"))),
+      );
+    }
     await smokeParsePython(out, work);
+    await smokeWorkerPool(out, work);
+    await smokeLanguages(out, work);
 
     // .env sits OUTSIDE app\ (like C:\NodeApps\repoatlas\.env): proves it is found via the entry file.
     await writeFile(path.join(out, ".env"), "CORS_ORIGIN=http://dry-run.example\n");

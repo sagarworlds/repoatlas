@@ -16,15 +16,16 @@ describe("language config", () => {
     expect(languageName("klingon")).toBe("klingon");
   });
 
-  it("supports TypeScript, JavaScript and Python", () => {
-    expect(SUPPORTED_LANGUAGES).toEqual(["typescript", "javascript", "python"]);
-    expect(isLanguageSupported("go")).toBe(false);
+  it("supports TypeScript, JavaScript, Python, Go and Java", () => {
+    expect(SUPPORTED_LANGUAGES).toEqual(["typescript", "javascript", "python", "go", "java"]);
+    expect(isLanguageSupported("go")).toBe(true);
+    expect(isLanguageSupported("kotlin")).toBe(false);
   });
 
   it("enables examples from the same config", () => {
-    const python = EXAMPLES.find((e) => e.language === "python");
-    const go = EXAMPLES.find((e) => e.language === "go");
-    expect(python && isExampleAvailable(python)).toBe(true);
-    expect(go && isExampleAvailable(go)).toBe(false);
+    for (const id of ["python", "go", "java", "javascript"] as const) {
+      const example = EXAMPLES.find((e) => e.language === id);
+      expect(example && isExampleAvailable(example)).toBe(true);
+    }
   });
 });

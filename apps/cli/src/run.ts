@@ -6,15 +6,24 @@ import {
   type AnalyzeRepositoryOptions,
   analyzeRepository,
   createDefaultRegistry,
+  type ExtractionCache,
   type Fetcher,
   GitHubFetcher,
   LocalDirFetcher,
   type ProgressEvent,
   parseGitHubUrl,
   type RepoRequest,
+  shutdownSharedPool,
 } from "@repoatlas/core";
+import { openExtractionCache } from "@repoatlas/store";
 import { expandShorthand, parseCliArgs, USAGE } from "./args.ts";
-import { ConfigError, limitsFromEnv, loadDotEnv } from "./config.ts";
+import {
+  ConfigError,
+  cacheSettingsFromEnv,
+  limitsFromEnv,
+  loadDotEnv,
+  workersFromEnv,
+} from "./config.ts";
 import { buildDump, writeFileAtomic } from "./dump.ts";
 import { formatStats } from "./report.ts";
 
@@ -32,6 +41,11 @@ export interface RunDeps {
   plugins?: AnalyzeRepositoryOptions["plugins"];
   /** Environment to read config from (default: process.env after loading the repo .env). */
   env?: NodeJS.ProcessEnv;
+  /**
+   * Extraction cache to use. `undefined` (default) opens the SQLite cache file from the
+   * environment unless --no-cache was given; `null` disables the cache (tests).
+   */
+  extractionCache?: ExtractionCache | null;
 }
 
 /** Replaces every occurrence of the secret so it can never reach the output. */
@@ -107,8 +121,10 @@ export async function run(argv: string[], deps: RunDeps = {}): Promise<number> {
   const token = env.GITHUB_TOKEN?.trim() || undefined;
 
   let limits: ReturnType<typeof limitsFromEnv>;
+  let workers: number | undefined;
   try {
     limits = limitsFromEnv(env);
+    workers = parsed.workers ?? workersFromEnv(env);
   } catch (error) {
     if (error instanceof ConfigError) {
       stderr.write(`error: ${error.message}\n`);
@@ -124,6 +140,22 @@ export async function run(argv: string[], deps: RunDeps = {}): Promise<number> {
     controller.abort(new Error("interrupted"));
   };
   process.once("SIGINT", onSigint);
+
+  // The cache is an optimization: if the file cannot be opened, warn and run without it.
+  let ownedCache: ReturnType<typeof openExtractionCache> | undefined;
+  let extractionCache: ExtractionCache | undefined;
+  if (deps.extractionCache) {
+    extractionCache = deps.extractionCache;
+  } else if (deps.extractionCache === undefined && !parsed.noCache) {
+    try {
+      const settings = cacheSettingsFromEnv(env);
+      ownedCache = openExtractionCache(settings.file, settings);
+      extractionCache = ownedCache;
+    } catch (error) {
+      stderr.write(`warning: extraction cache disabled (${redact(String(error), token)})
+`);
+    }
+  }
 
   const tempDirs: string[] = [];
   const progress = createProgressPrinter(stderr);
@@ -154,6 +186,8 @@ export async function run(argv: string[], deps: RunDeps = {}): Promise<number> {
       },
       onProgress: (event) => progress.onProgress(event),
       signal: controller.signal,
+      extractionCache,
+      extractPool: { workers: workers ?? "auto" },
     });
     progress.finish();
 
@@ -192,6 +226,8 @@ export async function run(argv: string[], deps: RunDeps = {}): Promise<number> {
     return EXIT_ANALYSIS;
   } finally {
     process.removeListener("SIGINT", onSigint);
+    ownedCache?.close();
+    await shutdownSharedPool();
     for (const dir of tempDirs) {
       await rm(dir, { recursive: true, force: true }).catch(() => undefined);
     }

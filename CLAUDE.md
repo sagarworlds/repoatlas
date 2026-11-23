@@ -86,7 +86,7 @@ pnpm test             # vitest across all packages
 pnpm typecheck        # tsc --noEmit across all packages
 pnpm lint             # biome check
 pnpm format           # biome format --write
-pnpm analyze <github-url> [--ref <ref>] [--out graph.json]   # CLI: run the pipeline locally
+pnpm analyze <github-url> [--ref <ref>] [--out graph.json] [--no-cache] [--workers <n>]   # CLI: run the pipeline locally (--local <dir> for a directory)
 ```
 
 (Create these scripts in Milestone 0 if they do not exist yet.)

@@ -9,7 +9,21 @@ describe("parseCliArgs", () => {
       ref: "main",
       out: "g.json",
       local: undefined,
+      noCache: false,
     });
+  });
+
+  it("parses --no-cache", () => {
+    expect(parseCliArgs(["--local", "d", "--no-cache"])).toMatchObject({ noCache: true });
+  });
+
+  it("parses --workers (0 = main thread only) and rejects bad values", () => {
+    expect(parseCliArgs(["--local", "d"])).toMatchObject({ workers: undefined });
+    expect(parseCliArgs(["--local", "d", "--workers", "4"])).toMatchObject({ workers: 4 });
+    expect(parseCliArgs(["--local", "d", "--workers", "0"])).toMatchObject({ workers: 0 });
+    for (const bad of ["-1", "2x", "1.5", "", "65", "many"]) {
+      expect(parseCliArgs(["--local", "d", "--workers", bad]).kind).toBe("error");
+    }
   });
 
   it("accepts --local without a positional", () => {

@@ -12,6 +12,8 @@ export const IGNORED_DIRS: ReadonlySet<string> = new Set([
   "dist",
   "build",
   "target",
+  "generated-sources",
+  "generated-test-sources",
   "bin",
   "obj",
   "__pycache__",
@@ -41,6 +43,8 @@ const GENERATED_SUFFIXES: readonly string[] = [
   ".min.css",
   ".bundle.js",
   ".pb.go",
+  "_gen.go",
+  ".gen.go",
   "_pb2.py",
   "_pb2_grpc.py",
   ".pb.cc",
@@ -65,6 +69,7 @@ export function isGeneratedPath(path: string): string | undefined {
   const base = slash >= 0 ? path.slice(slash + 1) : path;
   if (LOCKFILE_NAMES.has(base)) return "lockfile";
   const lower = base.toLowerCase();
+  if (lower.startsWith("zz_generated")) return "generated-path";
   if (GENERATED_SUFFIXES.some((suffix) => lower.endsWith(suffix))) return "generated-path";
   return undefined;
 }

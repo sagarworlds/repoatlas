@@ -4,14 +4,7 @@ import ts from "typescript";
 import { analyzeTypeScriptProject, computeProjectInfo } from "./analyze.ts";
 import { collectDefinitions } from "./definitions.ts";
 import { collectImports } from "./imports.ts";
-
-/** TypeScript source extensions handled today; JavaScript (".js", ...) joins in M4. */
-const TS_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts"];
-
-export function isTypeScriptSource(path: string): boolean {
-  if (path.endsWith(".d.ts") || path.endsWith(".d.mts") || path.endsWith(".d.cts")) return false;
-  return TS_EXTENSIONS.some((ext) => path.endsWith(ext));
-}
+import { isSupportedSource, languageOfSource } from "./source-kinds.ts";
 
 /** Syntax-only extraction of one file (no type information). Used by `extract`. */
 async function extractSingleFile(file: SourceFile): Promise<FileExtraction> {
@@ -64,7 +57,7 @@ async function extractSingleFile(file: SourceFile): Promise<FileExtraction> {
   const internal = sf as unknown as { parseDiagnostics?: readonly unknown[] };
   return {
     file: file.path,
-    language: "typescript",
+    language: languageOfSource(file.path),
     definitions,
     imports: collectImports(sf).map((s) => s.raw),
     references,
@@ -75,11 +68,11 @@ async function extractSingleFile(file: SourceFile): Promise<FileExtraction> {
 export const typescriptPlugin: LanguagePlugin = {
   id: "typescript",
   version: "1",
-  languages: ["typescript"],
+  languages: ["typescript", "javascript"],
   tier: 3,
 
   detect(files: RepoFile[]): RepoFile[] {
-    return files.filter((f) => isTypeScriptSource(f.path));
+    return files.filter((f) => isSupportedSource(f.path));
   },
 
   async prepare(ctx) {

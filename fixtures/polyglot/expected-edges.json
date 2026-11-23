@@ -1,14 +1,61 @@
 {
-  "expectLanguages": ["typescript", "python"],
+  "expectLanguages": ["typescript", "javascript", "python", "go", "java"],
   "noCrossLanguageEdges": true,
   "mustContainNodes": [
-    { "id": "sym:web/src/util.ts#formatName", "kind": "function", "meta": { "isExported": true } },
-    { "id": "sym:web/src/api.ts#greet", "kind": "function", "meta": { "isExported": true } },
-    { "id": "sym:app/helpers.py#build_url", "kind": "function" },
-    { "id": "sym:app/main.py#fetch", "kind": "function" },
-    { "id": "sym:app/main.py#main", "kind": "function" },
-    { "id": "ext:npm:lodash", "kind": "external" },
-    { "id": "ext:pypi:requests", "kind": "external" }
+    {
+      "id": "sym:web/src/util.ts#formatName",
+      "kind": "function",
+      "meta": {
+        "isExported": true
+      }
+    },
+    {
+      "id": "sym:web/src/api.ts#greet",
+      "kind": "function",
+      "meta": {
+        "isExported": true
+      }
+    },
+    {
+      "id": "sym:app/helpers.py#build_url",
+      "kind": "function"
+    },
+    {
+      "id": "sym:app/main.py#fetch",
+      "kind": "function"
+    },
+    {
+      "id": "sym:app/main.py#main",
+      "kind": "function"
+    },
+    {
+      "id": "ext:npm:lodash",
+      "kind": "external"
+    },
+    {
+      "id": "ext:pypi:requests",
+      "kind": "external"
+    },
+    {
+      "id": "sym:web/legacy/format.js#shout",
+      "kind": "function"
+    },
+    {
+      "id": "sym:svc/util/util.go#Join",
+      "kind": "function"
+    },
+    {
+      "id": "sym:svc/main.go#label",
+      "kind": "function"
+    },
+    {
+      "id": "sym:jvm/src/main/java/com/acme/poly/Helper.java#Helper.wrap",
+      "kind": "method"
+    },
+    {
+      "id": "sym:jvm/src/main/java/com/acme/poly/App.java#App.render",
+      "kind": "method"
+    }
   ],
   "mustContainEdges": [
     {
@@ -23,7 +70,11 @@
       "kind": "imports",
       "minConfidence": "exact"
     },
-    { "src": "file:web/src/api.ts", "dst": "ext:npm:lodash", "kind": "imports" },
+    {
+      "src": "file:web/src/api.ts",
+      "dst": "ext:npm:lodash",
+      "kind": "imports"
+    },
     {
       "src": "sym:app/main.py#fetch",
       "dst": "sym:app/helpers.py#build_url",
@@ -42,15 +93,76 @@
       "kind": "imports",
       "minConfidence": "inferred"
     },
-    { "src": "file:app/main.py", "dst": "ext:pypi:requests", "kind": "imports" }
+    {
+      "src": "file:app/main.py",
+      "dst": "ext:pypi:requests",
+      "kind": "imports"
+    },
+    {
+      "src": "sym:web/legacy/index.js#banner",
+      "dst": "sym:web/legacy/format.js#shout",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:svc/main.go#label",
+      "dst": "sym:svc/util/util.go#Join",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:jvm/src/main/java/com/acme/poly/App.java#App.render",
+      "dst": "sym:jvm/src/main/java/com/acme/poly/Helper.java#Helper.wrap",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    }
   ],
   "mustNotContainEdges": [
-    { "src": "sym:app/main.py#fetch", "dst": "ext:pypi:requests", "kind": "calls" },
-    { "src": "sym:web/src/api.ts#greet", "dst": "ext:npm:lodash", "kind": "calls" },
-    { "src": "sym:web/src/api.ts#greet", "dst": "sym:app/helpers.py#build_url", "kind": "calls" },
-    { "src": "sym:app/main.py#fetch", "dst": "sym:web/src/util.ts#formatName", "kind": "calls" },
-    { "src": "file:app/main.py", "dst": "ext:npm:lodash", "kind": "imports" },
-    { "src": "file:web/src/api.ts", "dst": "ext:pypi:requests", "kind": "imports" }
+    {
+      "src": "sym:app/main.py#fetch",
+      "dst": "ext:pypi:requests",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:web/src/api.ts#greet",
+      "dst": "ext:npm:lodash",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:web/src/api.ts#greet",
+      "dst": "sym:app/helpers.py#build_url",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:app/main.py#fetch",
+      "dst": "sym:web/src/util.ts#formatName",
+      "kind": "calls"
+    },
+    {
+      "src": "file:app/main.py",
+      "dst": "ext:npm:lodash",
+      "kind": "imports"
+    },
+    {
+      "src": "file:web/src/api.ts",
+      "dst": "ext:pypi:requests",
+      "kind": "imports"
+    },
+    {
+      "src": "sym:web/legacy/index.js#banner",
+      "dst": "sym:web/src/util.ts#formatName",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:svc/main.go#label",
+      "dst": "sym:app/helpers.py#build_url",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:jvm/src/main/java/com/acme/poly/App.java#App.render",
+      "dst": "sym:svc/util/util.go#Join",
+      "kind": "calls"
+    }
   ],
   "mustBeUnresolved": [],
   "parseErrorFiles": [],

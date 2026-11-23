@@ -15,6 +15,8 @@ export interface EdgeExtraction {
   unresolved: Unresolved[];
 }
 
+const MAX_AMBIGUOUS_CALLEES = 4;
+
 function unwrap(expr: ts.Expression): ts.Expression {
   let e = expr;
   while (ts.isParenthesizedExpression(e) || ts.isNonNullExpression(e)) e = e.expression;
@@ -67,15 +69,37 @@ export function extractFileEdges(
     return thisFile;
   }
 
-  /** Follows import/export aliases (also through re-exports) to one of our nodes. */
-  function refOf(symbol: ts.Symbol | undefined): NodeRef | undefined {
-    if (!symbol) return undefined;
+  /**
+   * Follows import/export aliases (also through re-exports) to the symbol's declarations that
+   * are nodes in our graph. Usually one; a property of a union-typed receiver or a method
+   * assigned in several places has several (distinct ids, in declaration order).
+   */
+  function refsOf(symbol: ts.Symbol | undefined, depth = 0): NodeRef[] {
+    if (!symbol) return [];
     const target = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
-    for (const decl of target.declarations ?? []) {
+    const decls = target.declarations ?? [];
+    const found = new Map<string, NodeRef>();
+    for (const decl of decls) {
       const ref = nodes.get(decl);
-      if (ref) return ref;
+      if (ref) found.set(ref.id, ref);
     }
-    return undefined;
+    if (found.size > 0 || depth >= 5) return [...found.values()];
+    // CommonJS `module.exports = { a, b: c }`: the property is only a pointer to the function
+    // declared elsewhere in the file, so follow it (depth-limited against pointer cycles).
+    for (const decl of decls) {
+      let next: ts.Symbol | undefined;
+      if (ts.isShorthandPropertyAssignment(decl)) {
+        next = checker.getShorthandAssignmentValueSymbol(decl);
+      } else if (ts.isPropertyAssignment(decl) && ts.isIdentifier(decl.initializer)) {
+        next = checker.getSymbolAtLocation(decl.initializer);
+      }
+      for (const ref of refsOf(next, depth + 1)) found.set(ref.id, ref);
+    }
+    return [...found.values()];
+  }
+
+  function refOf(symbol: ts.Symbol | undefined): NodeRef | undefined {
+    return refsOf(symbol)[0];
   }
 
   function refOfName(expr: ts.Expression | ts.EntityName): NodeRef | undefined {
@@ -112,13 +136,33 @@ export function extractFileEdges(
     const nameNode = nameNodeOf(expr);
     const symbol = nameNode ? checker.getSymbolAtLocation(nameNode) : undefined;
     if (symbol) {
-      const ref = refOf(symbol);
-      if (ref && (ref.kind === "function" || ref.kind === "method")) {
-        edges.push(makeEdge(callerId(call), ref.id, "calls", "exact", lineOf(call)));
+      const callees = refsOf(symbol).filter((r) => r.kind === "function" || r.kind === "method");
+      // One target is exact. A few candidates (the receiver can be one of several types) are
+      // all recorded as inferred; a long list is too ambiguous to be worth any edge.
+      if (callees.length >= 1 && callees.length <= MAX_AMBIGUOUS_CALLEES) {
+        const confidence = callees.length === 1 ? "exact" : "inferred";
+        for (const ref of callees) {
+          edges.push(makeEdge(callerId(call), ref.id, "calls", confidence, lineOf(call)));
+        }
       }
       return; // a symbol outside our graph (library, parameter, interface member): no edge
     }
-    // No symbol at all. `any`-typed values (usually from unresolvable imports) are external
+    // No symbol at all (the callee is itself a call, `f(1)('x')`). The
+    // resolved signature still names the declaration being invoked: a function in our graph
+    // gives an edge, a declaration outside it (library typings, interface member) is an
+    // external call like the case above.
+    const signatureDecl = ts.isCallExpression(expr)
+      ? checker.getResolvedSignature(call)?.declaration
+      : undefined;
+    if (signatureDecl) {
+      // `const f = () => {}` is registered under its VariableDeclaration, the parent.
+      const ref = nodes.get(signatureDecl) ?? nodes.get(signatureDecl.parent);
+      if (ref && (ref.kind === "function" || ref.kind === "method")) {
+        edges.push(makeEdge(callerId(call), ref.id, "calls", "exact", lineOf(call)));
+      }
+      return;
+    }
+    // `any`-typed values (usually from unresolvable imports) are external
     // calls and not interesting; anything else is genuinely unresolved (dynamic dispatch).
     const type = checker.getTypeAtLocation(expr);
     if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) return;
@@ -146,10 +190,15 @@ export function extractFileEdges(
     }
     if (cls?.kind === "class") {
       edges.push(makeEdge(callerId(node), cls.id, "references", "exact", lineOf(node)));
+    } else if (cls?.kind === "function") {
+      // `new Animal()` where `function Animal() {}` is a prototype-style constructor.
+      edges.push(makeEdge(callerId(node), cls.id, "calls", "exact", lineOf(node)));
     }
   }
 
-  function handleHeritage(node: ts.ClassDeclaration | ts.InterfaceDeclaration): void {
+  function handleHeritage(
+    node: ts.ClassDeclaration | ts.ClassExpression | ts.InterfaceDeclaration,
+  ): void {
     const self = nodes.get(node);
     if (!self || !node.heritageClauses) return;
     for (const clause of node.heritageClauses) {
@@ -184,8 +233,13 @@ export function extractFileEdges(
   function visit(node: ts.Node): boolean {
     if (ts.isCallExpression(node)) handleCall(node);
     else if (ts.isNewExpression(node)) handleNew(node);
-    else if (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) handleHeritage(node);
-    else if (ts.isTypeReferenceNode(node)) handleTypeReference(node);
+    else if (
+      ts.isClassDeclaration(node) ||
+      ts.isClassExpression(node) ||
+      ts.isInterfaceDeclaration(node)
+    ) {
+      handleHeritage(node);
+    } else if (ts.isTypeReferenceNode(node)) handleTypeReference(node);
     else if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) handleJsx(node);
     return true;
   }

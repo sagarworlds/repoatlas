@@ -11,6 +11,8 @@ describe("filters", () => {
   it("flags generated paths and lockfiles", () => {
     expect(isGeneratedPath("web/app.min.js")).toBe("generated-path");
     expect(isGeneratedPath("api/x.pb.go")).toBe("generated-path");
+    expect(isGeneratedPath("api/types_gen.go")).toBe("generated-path");
+    expect(isGeneratedPath("api/zz_generated.deepcopy.go")).toBe("generated-path");
     expect(isGeneratedPath("x_pb2.py")).toBe("generated-path");
     expect(isGeneratedPath("a/b/pnpm-lock.yaml")).toBe("lockfile");
     expect(isGeneratedPath("go.sum")).toBe("lockfile");

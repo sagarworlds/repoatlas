@@ -1,4 +1,4 @@
-// Which .wasm files ship in <bundle>/app/grammars. Adding a language in M4 is one line.
+// Which .wasm files ship in <bundle>/app/grammars. One line per language.
 import { copyFileSync, cpSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { findPackageDir } from "./bundle-deps.ts";
@@ -16,6 +16,8 @@ export interface GrammarFile {
 export const GRAMMAR_FILES: readonly GrammarFile[] = [
   { pkg: "web-tree-sitter", file: "web-tree-sitter.wasm", from: "packages/treesitter" },
   { pkg: "tree-sitter-python", file: "tree-sitter-python.wasm", from: "packages/lang-python" },
+  { pkg: "tree-sitter-go", file: "tree-sitter-go.wasm", from: "packages/lang-go" },
+  { pkg: "tree-sitter-java", file: "tree-sitter-java.wasm", from: "packages/lang-java" },
 ];
 
 /** Folder name inside the app folder. Must match apps/api/src/config.ts. */
@@ -58,6 +60,8 @@ export interface DataDir {
 
 export const DATA_DIRS: readonly DataDir[] = [
   { env: "PYTHON_QUERIES_DIR", from: "packages/lang-python/queries", dest: "queries/python" },
+  { env: "GO_QUERIES_DIR", from: "packages/lang-go/queries", dest: "queries/go" },
+  { env: "JAVA_QUERIES_DIR", from: "packages/lang-java/queries", dest: "queries/java" },
 ];
 
 /** Copies each data folder into the app folder. Fails loudly if a source is missing. */

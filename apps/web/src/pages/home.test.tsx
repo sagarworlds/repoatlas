@@ -72,19 +72,20 @@ describe("HomePage", () => {
     renderApp(<HomePage />, { path: "/" });
     const chips = screen.getByRole("list", { name: "Languages" });
     expect(within(chips).getByText("Python").closest("li")).not.toHaveTextContent("soon");
-    expect(within(chips).getByText("Go").closest("li")).toHaveTextContent("(soon)");
+    expect(within(chips).getByText("Go").closest("li")).not.toHaveTextContent("soon");
+    expect(within(chips).getByText("Kotlin").closest("li")).toHaveTextContent("(soon)");
     expect(screen.getByRole("button", { name: /pallets\/click/ })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /spf13\/cobra/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /spf13\/cobra/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /google.gson/ })).toBeEnabled();
   });
 
-  it("starts an example, and disables examples of unsupported languages", async () => {
+  it("starts an example", async () => {
     const fetchMock = mockFetch((_url, init) =>
       init?.method === "POST"
         ? { status: 202, body: { ...startOk, owner: "sindresorhus", repo: "ky" } }
         : { status: 200, body: { analyses: [] } },
     );
     renderApp(<HomePage />, { path: "/" });
-    expect(screen.getByRole("button", { name: /spf13\/cobra/ })).toBeDisabled();
     await userEvent.click(screen.getByRole("button", { name: /sindresorhus\/ky/ }));
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/a/an_new"));
     const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");

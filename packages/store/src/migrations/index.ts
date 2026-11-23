@@ -1,9 +1,14 @@
 import type Database from "better-sqlite3";
 import { initialMigration } from "./001-initial.ts";
 import { rollupVariantsMigration } from "./002-rollup-variants.ts";
+import { extractionCacheMigration } from "./003-extraction-cache.ts";
 
 /** Ordered list. Index + 1 is the `PRAGMA user_version` after the migration ran. Append only. */
-export const MIGRATIONS: readonly string[] = [initialMigration, rollupVariantsMigration];
+export const MIGRATIONS: readonly string[] = [
+  initialMigration,
+  rollupVariantsMigration,
+  extractionCacheMigration,
+];
 
 /**
  * Applies pending migrations, each in its own transaction, and records progress in

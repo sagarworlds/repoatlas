@@ -1,0 +1,1244 @@
+{
+  "mustContainNodes": [
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity",
+      "kind": "class",
+      "meta": {
+        "visibility": "public",
+        "isExported": true,
+        "java.abstract": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.Entity",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true,
+        "visibility": "protected"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.describe",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.kind",
+      "kind": "method",
+      "meta": {
+        "java.abstract": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.touch",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Auditable.java#Auditable",
+      "kind": "interface"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Auditable.java#Auditable.label",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Auditable.java#Auditable.auditLine",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User",
+      "kind": "class",
+      "meta": {
+        "visibility": "public",
+        "isExported": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.User",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true,
+        "java.params": 2
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.User@19",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true,
+        "java.params": 1
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.create",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.displayName",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.validate",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.save",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.describe",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.kind",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.label",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/User.java#User.addOrder",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Order",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.owner",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.addLine",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.total",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.summary",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.markPaid",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.kind",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line",
+      "kind": "class",
+      "meta": {
+        "isStatic": true,
+        "visibility": "internal"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.Line",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.cost",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.label",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Totals",
+      "kind": "class",
+      "meta": {
+        "visibility": "private"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Totals.discounted",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Status.java#Status",
+      "kind": "class",
+      "meta": {
+        "java.kind": "enum"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Status.java#Status.Status",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Status.java#Status.label",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Status.java#Status.shout",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Status.java#Status.next",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Money.java#Money",
+      "kind": "class",
+      "meta": {
+        "java.kind": "record"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Money.java#Money.of",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Money.java#Money.plus",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/model/Money.java#Money.minusPercent",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.Strings",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true,
+        "visibility": "private"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.capitalize",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.slug",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad",
+      "kind": "method",
+      "meta": {
+        "java.params": 1
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad@20",
+      "kind": "method",
+      "meta": {
+        "java.params": 2
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.mask",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.mask@28",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Result.java#Result",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Result.java#Result.Result",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true,
+        "visibility": "private"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Result.java#Result.ok",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Result.java#Result.fail",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Result.java#Result.isOk",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Result.java#Result.value",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Result.java#Result.andThen",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Validators.java#Validators",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Validators.java#Validators.requireNonBlank",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/util/Validators.java#Validators.isEmail",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserRepository.java#UserRepository",
+      "kind": "interface"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserRepository.java#UserRepository.save",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserRepository.java#UserRepository.findByName",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserRepository.java#UserRepository.count",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository.save",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository.findByName",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository.count",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/OrderService.java#OrderService",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/OrderService.java#OrderService.discountPercent",
+      "kind": "method",
+      "meta": {
+        "isStatic": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/OrderService.java#OrderService.charge",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.UserService",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.firstOrder",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.registerChecked",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.discountFor",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.label",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.handleAll",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.handle",
+      "kind": "method",
+      "meta": {
+        "visibility": "private"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.audit",
+      "kind": "method",
+      "meta": {
+        "visibility": "private"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.refresh",
+      "kind": "method",
+      "meta": {
+        "visibility": "private"
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.UserController",
+      "kind": "method",
+      "meta": {
+        "isConstructor": true
+      }
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.create",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.show",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/api/Broken.java#Broken.healthy",
+      "kind": "method"
+    },
+    {
+      "id": "sym:src/main/java/com/acme/shop/api/Broken.java#Broken.alsoFine",
+      "kind": "method"
+    },
+    {
+      "id": "file:src/test/java/com/acme/shop/service/UserServiceTest.java",
+      "kind": "file",
+      "meta": {
+        "isTest": true
+      }
+    },
+    {
+      "id": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest",
+      "kind": "class"
+    },
+    {
+      "id": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.registersUser",
+      "kind": "method",
+      "meta": {
+        "isTest": true
+      }
+    },
+    {
+      "id": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.firstOrderHasTotal",
+      "kind": "method",
+      "meta": {
+        "isTest": true
+      }
+    },
+    {
+      "id": "ext:maven:jdk",
+      "kind": "external"
+    },
+    {
+      "id": "ext:maven:org.springframework",
+      "kind": "external"
+    },
+    {
+      "id": "ext:maven:org.junit.jupiter",
+      "kind": "external"
+    }
+  ],
+  "mustContainEdges": [
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.User",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.Entity",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.User",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.capitalize",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.User@19",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.User",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.create",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.User@19",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Order",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.Entity",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.addLine",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.Line",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.User@19",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.firstOrder",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Order",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/util/Result.java#Result.ok",
+      "dst": "sym:src/main/java/com/acme/shop/util/Result.java#Result.Result",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/util/Result.java#Result.fail",
+      "dst": "sym:src/main/java/com/acme/shop/util/Result.java#Result.Result",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.UserService",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.save",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.validate",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.save",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.touch",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.describe",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.describe",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.label",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.displayName",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.touch",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.describe",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Auditable.java#Auditable.auditLine",
+      "dst": "sym:src/main/java/com/acme/shop/model/Auditable.java#Auditable.label",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.summary",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.describe",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.markPaid",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.touch",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Status.java#Status.shout",
+      "dst": "sym:src/main/java/com/acme/shop/model/Status.java#Status.label",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/util/Result.java#Result.andThen",
+      "dst": "sym:src/main/java/com/acme/shop/util/Result.java#Result.isOk",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/util/Result.java#Result.andThen",
+      "dst": "sym:src/main/java/com/acme/shop/util/Result.java#Result.fail",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.displayName",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad@20",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.slug",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.capitalize",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.slug",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad@20",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.label",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.label",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad@20",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.firstOrder",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.create",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.firstOrder",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.slug",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.firstOrder",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.addLine",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.total",
+      "dst": "sym:src/main/java/com/acme/shop/model/Money.java#Money.of",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.cost",
+      "dst": "sym:src/main/java/com/acme/shop/model/Money.java#Money.of",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.label",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.slug",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.total",
+      "dst": "sym:src/main/java/com/acme/shop/model/Money.java#Money.plus",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.total",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.cost",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.total",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Totals.discounted",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.summary",
+      "dst": "sym:src/main/java/com/acme/shop/model/Status.java#Status.label",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.markPaid",
+      "dst": "sym:src/main/java/com/acme/shop/model/Status.java#Status.next",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.save",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserRepository.java#UserRepository.save",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.refresh",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserRepository.java#UserRepository.count",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.handle",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.save",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.audit",
+      "dst": "sym:src/main/java/com/acme/shop/model/Auditable.java#Auditable.auditLine",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository.save",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.validate",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository.save",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.displayName",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/OrderService.java#OrderService.discountPercent",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.kind",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/OrderService.java#OrderService.charge",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.markPaid",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/OrderService.java#OrderService.charge",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.total",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Totals.discounted",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.owner",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Totals.discounted",
+      "dst": "sym:src/main/java/com/acme/shop/service/OrderService.java#OrderService.discountPercent",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Totals.discounted",
+      "dst": "sym:src/main/java/com/acme/shop/model/Money.java#Money.minusPercent",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.discountFor",
+      "dst": "sym:src/main/java/com/acme/shop/service/OrderService.java#OrderService.discountPercent",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.registerChecked",
+      "dst": "sym:src/main/java/com/acme/shop/util/Result.java#Result.ok",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.registerChecked",
+      "dst": "sym:src/main/java/com/acme/shop/util/Result.java#Result.fail",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.registerChecked",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.handleAll",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.handle",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.handleAll",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.audit",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.handleAll",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.refresh",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.create",
+      "dst": "sym:src/main/java/com/acme/shop/util/Validators.java#Validators.requireNonBlank",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.create",
+      "dst": "sym:src/main/java/com/acme/shop/util/Validators.java#Validators.isEmail",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.create",
+      "dst": "sym:src/main/java/com/acme/shop/util/Result.java#Result.fail",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.create",
+      "dst": "sym:src/main/java/com/acme/shop/util/Result.java#Result.ok",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.create",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.show",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.show",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.displayName",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/UserController.java#UserController.show",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.capitalize",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/Broken.java#Broken.healthy",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.capitalize",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/Broken.java#Broken.alsoFine",
+      "dst": "sym:src/main/java/com/acme/shop/api/Broken.java#Broken.healthy",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.registersUser",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.registersUser",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.displayName",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.firstOrderHasTotal",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.firstOrder",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.firstOrderHasTotal",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.total",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.firstOrderHasTotal",
+      "dst": "sym:src/main/java/com/acme/shop/model/Money.java#Money.plus",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.firstOrderHasTotal",
+      "dst": "sym:src/main/java/com/acme/shop/model/Money.java#Money.of",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.total",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Totals",
+      "kind": "references",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Money.java#Money.of",
+      "dst": "sym:src/main/java/com/acme/shop/model/Money.java#Money",
+      "kind": "references",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity",
+      "kind": "extends",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User",
+      "dst": "sym:src/main/java/com/acme/shop/model/Auditable.java#Auditable",
+      "kind": "implements",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order",
+      "dst": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity",
+      "kind": "extends",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository",
+      "dst": "sym:src/main/java/com/acme/shop/service/UserRepository.java#UserRepository",
+      "kind": "implements",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/model/User.java",
+      "dst": "file:src/main/java/com/acme/shop/util/Strings.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/model/Order.java",
+      "dst": "file:src/main/java/com/acme/shop/service/OrderService.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/model/Order.java",
+      "dst": "file:src/main/java/com/acme/shop/util/Strings.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/OrderService.java",
+      "dst": "file:src/main/java/com/acme/shop/model/Order.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/OrderService.java",
+      "dst": "file:src/main/java/com/acme/shop/model/User.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/OrderService.java",
+      "dst": "file:src/main/java/com/acme/shop/model/Money.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/UserService.java",
+      "dst": "file:src/main/java/com/acme/shop/model/Order.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/UserService.java",
+      "dst": "file:src/main/java/com/acme/shop/model/User.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/UserService.java",
+      "dst": "file:src/main/java/com/acme/shop/util/Result.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/UserService.java",
+      "dst": "file:src/main/java/com/acme/shop/util/Strings.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/InMemoryUserRepository.java",
+      "dst": "file:src/main/java/com/acme/shop/model/User.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/UserRepository.java",
+      "dst": "file:src/main/java/com/acme/shop/model/User.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/api/UserController.java",
+      "dst": "file:src/main/java/com/acme/shop/model/User.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/api/UserController.java",
+      "dst": "file:src/main/java/com/acme/shop/service/UserService.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/api/UserController.java",
+      "dst": "file:src/main/java/com/acme/shop/util/Result.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/api/UserController.java",
+      "dst": "file:src/main/java/com/acme/shop/util/Validators.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/api/UserController.java",
+      "dst": "file:src/main/java/com/acme/shop/util/Strings.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/api/Broken.java",
+      "dst": "file:src/main/java/com/acme/shop/util/Strings.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/test/java/com/acme/shop/service/UserServiceTest.java",
+      "dst": "file:src/main/java/com/acme/shop/model/Money.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/test/java/com/acme/shop/service/UserServiceTest.java",
+      "dst": "file:src/main/java/com/acme/shop/model/Order.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/test/java/com/acme/shop/service/UserServiceTest.java",
+      "dst": "file:src/main/java/com/acme/shop/model/User.java",
+      "kind": "imports",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/model/User.java",
+      "dst": "ext:maven:jdk",
+      "kind": "imports"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/model/Order.java",
+      "dst": "ext:maven:jdk",
+      "kind": "imports"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/InMemoryUserRepository.java",
+      "dst": "ext:maven:jdk",
+      "kind": "imports"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/UserService.java",
+      "dst": "ext:maven:org.springframework",
+      "kind": "imports"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/api/UserController.java",
+      "dst": "ext:maven:org.springframework",
+      "kind": "imports"
+    },
+    {
+      "src": "file:src/test/java/com/acme/shop/service/UserServiceTest.java",
+      "dst": "ext:maven:org.junit.jupiter",
+      "kind": "imports"
+    }
+  ],
+  "mustNotContainEdges": [
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "dst": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository.save",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.refresh",
+      "dst": "sym:src/main/java/com/acme/shop/service/InMemoryUserRepository.java#InMemoryUserRepository.count",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.handleAll",
+      "dst": "ext:maven:jdk",
+      "kind": "calls"
+    },
+    {
+      "src": "file:src/main/java/com/acme/shop/service/UserService.java",
+      "dst": "ext:maven:org.springframework",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.addLine",
+      "dst": "ext:maven:jdk",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.addOrder",
+      "dst": "ext:maven:jdk",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/test/java/com/acme/shop/service/UserServiceTest.java#UserServiceTest.registersUser",
+      "dst": "ext:maven:org.junit.jupiter",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.summary",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.label",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Order.java#Order.summary",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.label",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Status.java#Status.shout",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.label",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Status.java#Status.shout",
+      "dst": "sym:src/main/java/com/acme/shop/model/Order.java#Order.Line.label",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Auditable.java#Auditable.auditLine",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.label",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/Entity.java#Entity.touch",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.describe",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.describe",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.describe",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.User@19",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.User@19",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.displayName",
+      "dst": "sym:src/main/java/com/acme/shop/util/Strings.java#Strings.pad",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/service/UserService.java#UserService.register",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.User",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/model/User.java#User.create",
+      "dst": "sym:src/main/java/com/acme/shop/model/User.java#User.User",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/main/java/com/acme/shop/api/Broken.java#Broken.healthy",
+      "dst": "sym:src/main/java/com/acme/shop/api/Broken.java#Broken.alsoFine",
+      "kind": "calls"
+    }
+  ],
+  "mustBeUnresolved": [],
+  "parseErrorFiles": ["src/main/java/com/acme/shop/api/Broken.java"],
+  "minResolutionRate": 0.8
+}

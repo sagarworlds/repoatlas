@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@repoatlas/lang-go": "workspace:*",
+    "@repoatlas/lang-java": "workspace:*",
     "@repoatlas/lang-python": "workspace:*",
     "@repoatlas/lang-typescript": "workspace:*",
     "@repoatlas/plugin-api": "workspace:*",

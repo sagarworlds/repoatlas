@@ -8,7 +8,9 @@ import type {
   ProgressCallback,
   RepoRequest,
 } from "../types.ts";
+import type { ExtractionCache } from "./extraction-cache.ts";
 import { runPipeline } from "./run-pipeline.ts";
+import type { ExtractPoolSettings } from "./workers/pooled-extractor.ts";
 
 export interface AnalyzeRepositoryOptions {
   fetcher: Fetcher;
@@ -25,6 +27,10 @@ export interface AnalyzeRepositoryOptions {
   /** Called as soon as the ref is resolved to a commit (before any download). */
   onResolved?: ((info: { commitSha: string; ref: string }) => void) | undefined;
   signal?: AbortSignal | undefined;
+  /** Optional per-file extraction cache (see extraction-cache.ts). */
+  extractionCache?: ExtractionCache | undefined;
+  /** Optional worker-thread extraction; omit to stay on the main thread. */
+  extractPool?: ExtractPoolSettings | undefined;
 }
 
 export type AnalyzeRepositoryResult =
@@ -71,6 +77,8 @@ export async function analyzeRepository(
     limits,
     onProgress: options.onProgress,
     signal,
+    extractionCache: options.extractionCache,
+    extractPool: options.extractPool,
   });
   return { status: "analyzed", fetched, result };
 }

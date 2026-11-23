@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { analyzeRepository, Fetcher } from "@repoatlas/core";
+import type { analyzeRepository, ExtractionCache, Fetcher } from "@repoatlas/core";
 import type { GraphStore } from "@repoatlas/store";
 import type { FastifyBaseLogger, FastifyInstance, RawServerDefault } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
@@ -15,6 +15,8 @@ export interface ApiDeps {
   store: GraphStore;
   fetcher: Fetcher;
   plugins: PluginList;
+  /** Optional per-file extraction cache shared by all analysis jobs. */
+  extractionCache?: ExtractionCache | undefined;
 }
 
 /** Dependencies handed to each route module. */

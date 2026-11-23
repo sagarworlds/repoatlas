@@ -32,8 +32,9 @@ code panel loads at most 2,000 lines per request.
 - Input: GitHub URL (accept `owner/repo` shorthand too) + optional ref. Inline
   validation; show all languages as small chips (supported ones active, planned ones muted
   with "(soon)"), driven by `config/languages.ts`.
-- "Try" examples: 3–4 small, well-known repos in different languages (one TS, one
-  Python, one Go...). Keep the list in a config file.
+- "Try" examples: small, well-known repos in different languages (currently ky, zustand,
+  click, express, cobra and gson: TypeScript, Python, JavaScript, Go and Java). Keep the
+  list in a config file. TypeScript, JavaScript, Python, Go and Java are marked supported.
 - Recent: user's own recent analyses from `localStorage` (id, repo, date, status),
   then global recent from `GET /api/analyses`.
 - After submit: navigate to `/a/:id`, which shows a progress view until `done`.

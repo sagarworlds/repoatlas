@@ -99,7 +99,12 @@ Notes:
 - **Cache key** is `(owner, repo, commitSha, analyzerVersion)`. If it exists, skip
   re-analysis and return the existing result.
 - **Per-file extraction cache** keyed by `(pluginId, pluginVersion, contentHash)` so a
-  later commit only re-parses changed files. (Implement in a later milestone.)
+  later commit only re-parses changed files. Implemented in M4 (DECISIONS D41): the key also
+  contains `analyzerVersion`, `schemaVersion`, the language and the path; Tier 1 plugins only;
+  stored in the `extraction_cache` table; `stats.cache = {hits, misses}`.
+- **Extraction worker pool** (M4, DECISIONS D40): Tier 1 per-file extraction runs in a shared
+  `worker_threads` pool (`packages/core/src/pipeline/workers`) for repos of 100+ files; the
+  main thread path is the fallback and the debugging mode (`EXTRACT_WORKERS=0`).
 - Stages 5 and 7 are split so that extraction is embarrassingly parallel and pure,
   while resolution has access to the whole repo's symbol index.
 - Stage order in code: extract, index, resolve, structure (file nodes need the surviving
@@ -129,8 +134,9 @@ Notes:
   process without changes to the pipeline code.
 - Status: `queued → fetching → parsing → resolving → persisting → done | failed`.
   Progress is reported as `{ phase, filesDone, filesTotal }` and polled by the UI.
-- Run CPU-heavy extraction in `worker_threads` (pool size = CPU cores − 1) once the
-  single-threaded version works. Keep plugin functions serializable-input/output to allow this.
+- CPU-heavy extraction of Tier 1 plugins runs in a shared `worker_threads` pool (size =
+  min(CPU cores − 1, files/50, 8); see DECISIONS D40). Plugin functions take and return
+  serializable data. The Tier 3 TypeScript/JavaScript plugin runs on the main thread.
 
 ## 6. Storage
 
@@ -174,6 +180,9 @@ MAX_FILES=20000
 MAX_FILE_BYTES=1048576        # 1 MB
 ANALYSIS_TIMEOUT_MS=600000    # 10 min
 CACHE_MAX_ANALYSES=200        # newest finished (done or failed) analyses kept
+CACHE_MAX_EXTRACTIONS=200000  # per-file extraction cache: max rows (LRU)
+CACHE_MAX_EXTRACTION_BYTES=524288000  # per-file extraction cache: max total bytes
+EXTRACT_WORKERS=              # extraction threads: unset = auto; 0 or 1 = main thread only
 LOG_LEVEL=info
 CORS_ORIGIN=http://localhost:5173
 TRUST_PROXY=false             # hop count (IIS: 1), "loopback" or false; never "true"

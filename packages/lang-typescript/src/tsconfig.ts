@@ -15,8 +15,9 @@ export function applyCompilerOverrides(raw: ts.CompilerOptions | undefined): ts.
   // Fixed by us: we only analyze, never emit or build.
   options.noEmit = true;
   options.skipLibCheck = true;
-  options.allowJs = false; // JavaScript support arrives with the javascript language (M4)
-  options.checkJs = false;
+  options.allowJs = true; // .js/.jsx/.mjs/.cjs files are analyzed too (CommonJS and ESM)
+  options.checkJs = false; // never report type errors in JavaScript
+  options.maxNodeModuleJsDepth = 0; // node_modules never exists, so never load JS from it
   options.composite = false;
   options.incremental = false;
   options.declaration = false;
@@ -53,18 +54,31 @@ export function applyCompilerOverrides(raw: ts.CompilerOptions | undefined): ts.
   return options;
 }
 
-/** Reads tsconfig.json at the repo root through RepoView (never ts.sys). */
+/**
+ * Reads tsconfig.json at the repo root through RepoView (never ts.sys). A JavaScript-only
+ * project may have a jsconfig.json instead; it is read the same way when no tsconfig exists.
+ */
 export function readTsconfigOptions(repo: RepoView): {
   options: ts.CompilerOptions;
   tsconfigPath: string | undefined;
 } {
-  const text = repo.readSync("tsconfig.json");
-  if (text === undefined)
-    return { options: applyCompilerOverrides(undefined), tsconfigPath: undefined };
+  for (const name of CONFIG_FILE_NAMES) {
+    const text = repo.readSync(name);
+    if (text !== undefined) return readConfigText(repo, name, text);
+  }
+  return { options: applyCompilerOverrides(undefined), tsconfigPath: undefined };
+}
 
-  const parsedText = ts.parseConfigFileTextToJson("tsconfig.json", text);
+const CONFIG_FILE_NAMES = ["tsconfig.json", "jsconfig.json"];
+
+function readConfigText(
+  repo: RepoView,
+  name: string,
+  text: string,
+): { options: ts.CompilerOptions; tsconfigPath: string } {
+  const parsedText = ts.parseConfigFileTextToJson(name, text);
   if (parsedText.config === undefined) {
-    return { options: applyCompilerOverrides(undefined), tsconfigPath: "tsconfig.json" };
+    return { options: applyCompilerOverrides(undefined), tsconfigPath: name };
   }
 
   // A ParseConfigHost over RepoView so that "extends" chains resolve inside the repo only.
@@ -85,10 +99,10 @@ export function readTsconfigOptions(repo: RepoView): {
     host,
     VIRTUAL_ROOT,
     undefined,
-    toVirtualPath("tsconfig.json"),
+    toVirtualPath(name),
   );
   // parsed.errors (missing "extends" packages, empty include, ...) are deliberately ignored.
-  return { options: applyCompilerOverrides(parsed.options), tsconfigPath: "tsconfig.json" };
+  return { options: applyCompilerOverrides(parsed.options), tsconfigPath: name };
 }
 
 function relOf(abs: string): string | undefined {

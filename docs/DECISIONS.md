@@ -335,6 +335,123 @@ owner lookup in `postProcess` (now a sorted sweep) and the `setup.cfg` key regex
 200 KB total and 2,000 chars per line). All stages after parsing now respect the per-file deadline. Parsing in a
 worker thread (planned for M4) remains the real protection for a runaway grammar.
 
+## D37 — JavaScript through the TypeScript plugin (2026-11-23)
+**Decision:** JavaScript is not a separate plugin. `lang-typescript` (`languages: ["typescript","javascript"]`, Tier 3)
+claims `.js/.jsx/.mjs/.cjs` as well as `.ts/.tsx/.mts/.cts` and never `.d.ts`. Compiler overrides: `allowJs: true`,
+`checkJs: false`, `maxNodeModuleJsDepth: 0`; `tsconfig.json` is read first, `jsconfig.json` is the fallback.
+JS nodes and definitions carry `language: "javascript"` (so stats are per language). CommonJS: `require("x")` with one
+literal argument is an import (non-literal arguments record nothing: no edge, no `isDynamic` marker; a literal
+`import()` is kind `dynamic`); `module.exports = ...`, `exports.x = ...` and `Owner.prototype.m = ...` create
+definitions (prototype methods are kind `method` with `meta["js.isPrototypeMethod"]`, function constructors are
+`function`). `@type {import("./x")}` in JSDoc counts as a type-only import (found with a linear `indexOf` scan, never a
+lazy regex: a quadratic regex stalled the event loop for 25-60 s on one hostile file). A call whose callee is a call
+result (`require("./boot")(app)`) is attributed through `getResolvedSignature(call).declaration`; a declaration outside
+the graph is external (no edge, not counted). A `foo.d.ts` next to `foo.js` is hidden from module resolution so
+imports and calls reach the implementation node. Workspace packages resolve JS entries (`main: lib/index.js`).
+**Target decision:** the JS target stays at 90% with the D17/D32 definition. For untyped JS the rate counts only
+references the checker can attribute; calls through untyped parameters, `any` receivers, `.d.ts`-typed APIs and test
+globals are in neither number. Name-based matching was deliberately not added (it would raise the name-match share).
+**Consequences:** Tier 3 runs on the main thread and is not cached per file (D41). Object-literal methods, mixins
+(`Object.assign(Foo.prototype, ...)`) and `util.inherits` are not modelled.
+
+## D38 — Go plugin conventions (2026-11-23)
+**Decision:** `lang-go` is Tier 1. Package = directory; one `mod:go:{import path}` node per directory with Go files
+(import path = go.mod module path + relative dir; several go.mod files are supported; `replace` and `go.work` are
+ignored). Internal imports are `file -> mod` edges (`exact` under a go.mod); stdlib collapses into `ext:go:stdlib`,
+third-party into `ext:go:{longest required prefix, else first 3 segments}`, `import "C"` into `ext:go:cgo`. Test
+files see their package's non-test scope; `foo_test` packages are separate scopes. Methods have ids `Receiver.Method`
+(the receiver type may live in another file: attachment goes through `meta["go.receiver"]` and a package method
+table). Structs and named types are kind `class` (`go.kind: "alias"` for non-struct named types), interfaces kind
+`interface`; embedding is an `extends` edge (promoted methods are found through it, `inferred`); no `implements` edges
+(interface calls fall back to name-match, 1-3 candidates). Receiver hints are a small grammar in
+`receiverTypeHint`: `T`, `pkg.T`, `call:NewT` (type = first result type parsed from the callee signature,
+`func NewT(...) *T`), chains `base/f:field/m:Method` (struct fields from `meta["go.fields"]`, method results from
+signatures), `pkgvar:x` (package-level variables, `meta["go.vars"]` per file) and `a|b` alternatives that must all
+lead to the same type. A local variable or parameter that shadows an imported package or a package function is
+detected in the extractor (hint `local:` or the call is dropped), so it cannot produce a false edge. An unaliased
+third-party import whose real package name differs from the guessed one (`golang-lru` is `lru`) makes an unbound
+identifier receiver external instead of name-matched. Builtin calls and conversions to predeclared types are dropped
+at extraction. Generated paths (`*.pb.go`, `*_gen.go`, `zz_generated*`) are skipped by the walker.
+**Consequences:** Interface-typed receivers, range variables and function values passed as arguments are not typed.
+
+## D39 — Java plugin conventions (2026-11-23)
+**Decision:** `lang-java` is Tier 1 and resolves by fully qualified name: `java.package` file meta plus the
+outer-class chain gives each class its FQN. Type lookup order: member types of enclosing classes (and their supers),
+single-type imports, same package, wildcard imports, implicit `java.lang`, then the name as qualified. When several
+modules declare the same FQN (multi-module repos) the class nearest to the caller (longest shared directory prefix)
+wins. Constructors are methods named after the class (`User.User`, `isConstructor`); later overloads carry `@line`.
+Overloads are chosen by arity, then by argument types: the extractor records parameter and return types
+(`java.paramTypes`, `java.returns`) and the static type of each call argument (file meta `java.callArgs`, keyed
+`line:name#ordinal`); candidates that cannot fit are dropped and the best score wins; undecided pairs stay
+`name-match` (2-3 candidates) or `ambiguous`. Call chains follow declared return types; a chain rooted in an external
+type is external. Class-typed fields are recorded (`java.fields`) so fields inherited from a repo super class are
+typed. Anonymous classes become stand-in classes that inherit from their base for unqualified calls. Misses are silent
+(external) when the class has an external or unresolved super type, is a record, an enum (enum methods), has
+Lombok-style annotations, or the receiver's declared type is outside the repository; a miss on a fully known class or
+`super.m()` is unresolved (never name-matched). Externals: `ext:maven:{longest declared pom/gradle groupId prefix}`,
+else `jdk` for `java*`/`javax*`/`jdk*`/`sun*`/`com.sun`/`org.w3c`/`org.xml`, else 2 segments (3 for `com.github`,
+`io.github`, `com.google.cloud`, `org.apache.commons`). `pom.xml` is read with a tokenizer (no entity expansion, 2 MB
+cap), Gradle files with a line scanner. Wildcard imports yield an `imports` edge only for files actually used.
+Field-initializer calls are attributed to the enclosing class node. Resolution is self-contained in `lang-java`
+(overloads and Java scoping do not fit the name-only member lookup of `plugin-api`), but still uses its
+`applySuperTypes`, name-match and summary helpers.
+**Consequences:** Generic bounds are ignored; type variables are guessed from the name (1-2 upper-case characters).
+
+## D40 — Extraction worker pool (2026-11-23)
+**Decision:** Tier 1 per-file extraction can run in `worker_threads`. One shared, lazily created, reference-counted
+pool per process (closed after 30 s idle) instead of one pool per analysis, because `ANALYSIS_CONCURRENCY=2` would
+otherwise start 2 x N threads. Worker count = min(configured or CPUs-1, floor(files/50), 8); fewer than 2 means the
+main thread (so repos under 100 files never start a pool). `EXTRACT_WORKERS` / `--workers` set it (0 or 1 = main
+thread, for debugging); default `auto` for the API and CLI, off when no pool settings are passed (tests). The worker
+entry imports `createDefaultRegistry`, so a plugin must be registered there to be pooled; only Tier 1 plugins without
+`analyzeProject` that are the same object as the registry's go to the pool. `prepare()` info is sent once per worker
+per session (structured clone; a non-cloneable info records a pool plugin error and the run falls back to the main
+thread). Each worker holds at most 2 files in flight; results are validated on the main thread with the schema and
+must carry the requested path; results are placed by file index so output is deterministic. Limits: 768 MB old
+generation, 64 MB young generation, 60 s watchdog per file, 60 s start-up timeout, recycle after 10,000 files. A
+crash or timeout skips only the file being processed (never re-run on the main thread); two consecutive start
+failures mark the pool broken and the run falls back. Worker file: dev and Vitest use `worker-entry.ts` with
+`--import tsx`, the bundle ships `apps/api/dist/extract-worker.js` next to `server.js`, located through
+`import.meta.url`. Measured: 3.6x faster extraction on a synthetic 1,500-file Python repo with 7 workers; small gains
+on 100-600 file repos (start-up cost). The pool is bounded by main-thread schema validation of the results.
+**Consequences:** The TypeScript/JavaScript plugin (Tier 3) is never pooled. A running `extract()` cannot be
+cancelled; its late answer is dropped. The API calls `shutdownSharedPool()` on shutdown.
+
+## D41 — Per-file extraction cache (2026-11-23)
+**Decision:** Tier 1 extractions are cached in SQLite table `extraction_cache` (migration 003, same file as the
+graph, own connection, WAL). Key = sha256 of the JSON array `[format, ANALYZER_VERSION, SCHEMA_VERSION, plugin id,
+plugin version, language, path, sha256(content)]`. The path is part of the key (localIds can embed it); a renamed
+file is one cheap miss. `prepare()` info is not part of the key, so `extract()` must depend only on the file; if a
+plugin ever needs info there it must bump its version. Not cached: Tier 3 and `analyzeProject` plugins, and
+extractions with `parseErrors > 0` (a grammar load failure looks like a parse error and would poison later runs).
+Reads are zod-validated, a bad row is a miss and is deleted; a hit must carry the same `file` and `language`. Lookup
+and store are batched (500 keys per SELECT, one transaction each); LRU eviction trims to 90% of `CACHE_MAX_EXTRACTIONS`
+(200,000) and `CACHE_MAX_EXTRACTION_BYTES` (500 MB); rows over 4 MiB are never stored. A failing cache records a plugin
+error with stage `cache` and the analysis continues. `stats.cache = {hits, misses}` is present when a cache was
+passed. CLI: `data/cli-cache.db` (`CLI_CACHE_FILE`, `--no-cache`). Measured: gin 2297 ms cold, 352 ms warm; guice
+10.8 s cold, 3.3 s warm (631/631 hits).
+**Consequences:** The cache lives in `repoatlas.db`, so it grows the file (eviction does not VACUUM).
+
+## D42 — M4 review hardening (2026-11-23)
+**Decision:** Findings from the adversarial review were fixed: `disambiguateLocalIds` is linear (a per-base counter;
+it was quadratic for many same-line duplicates and blocked for tens of seconds); the pipeline no longer spreads whole
+edge lists into `push(...)` (RangeError above about 125k items); `ANALYZER_VERSION` is `"2"` so analyses stored
+before M4 (no JS, Go or Java) are recomputed and old extraction cache rows are not reused; Go shadowing and Java
+resolution fixes are described in D38 and D39 (all-caps class names are found by lookup, not by case; a declared type
+outside the repo is external; an inner class that extends an outside class binds inherited members before the outer
+class; repo classes named like java.lang types get `type` references).
+**Consequences:** Regression tests for each fix live next to the code (`review-fixes.test.ts`, `shadowing.test.ts`,
+`javascript.test.ts`, `pipeline-isolation.test.ts`, `ids.test.ts`, `version.test.ts`).
+
+## D43 — M4 acceptance numbers (2026-11-23)
+**Decision:** Targets are unchanged (TS/JS >= 90%, Go/Java >= 75%, name-match < 20%), measured with the D32
+definition on real repos (rows below, `pnpm analyze --local` on tarballs at the given shas, `--no-cache`). Go: gin 96.0%,
+echo 98.5% (both embedding-heavy), plus cobra, chi, mux, logrus and urfave/cli. Java: gson, javapoet, commons-cli,
+jsoup and guice (96.7-98.7%). JavaScript: express, chalk, koa, axios, fastify, preact, mocha (98.8-100%). The hidden
+share of untyped-JS calls (parameters, `.d.ts`, globals) is not in the rate by definition (D37). A language with very
+few references (fastify TS: 0/5) triggers a CLI WARN that is not meaningful; a minimum-sample rule would be a CLI
+follow-up. The numbers come from the tuning agents; the lead re-runs the acceptance before M4 is ticked.
+
 ---
 
 ## Real-repo smoke results
@@ -347,3 +464,24 @@ worker thread (planned for M4) remains the real protection for a runaway grammar
 | 2026-11-22 | Python | fixtures/python | 11 | golden | n/a | <1 s | golden fixture, 1 parse-error file |
 | 2026-11-22 | Python | psf/requests @ 3c7baaa | 37 | 86.8% (1046/1205) | 2.9% | 0.7 s | D32 denominator; 38.6% over all raw calls; precision sample 39/40 |
 | 2026-11-22 | Python | pallets/click @ 08b803c | 91 | 90.3% (4058/4494) | 5.3% | 1.6 s | D32 denominator; 56.0% over all raw calls; precision sample 40/40 |
+| 2026-11-23 | Go | gin-gonic/gin @ 0f09c3a | 98 | 96.0% (3534/3682) | 2.9% | 2.3 s | precision 40/40; 0.35 s with a warm cache |
+| 2026-11-23 | Go | labstack/echo @ 59aacdd | 115 | 98.5% (5167/5248) | 2.8% | 4.0 s | precision 40/40 |
+| 2026-11-23 | Go | spf13/cobra @ adbc881 | 36 | 100% (2207/2207) | 2.7% | n/a | |
+| 2026-11-23 | Go | go-chi/chi @ c64ed7d | 90 | 99.5% (1750/1758) | 8.2% | n/a | |
+| 2026-11-23 | Go | gorilla/mux @ db9d1d0 | 17 | 99.4% (1278/1286) | 1.0% | n/a | name-match was 25.1% before tuning |
+| 2026-11-23 | Go | sirupsen/logrus @ 954b418 | 53 | 99.4% (1235/1242) | 2.4% | n/a | |
+| 2026-11-23 | Go | urfave/cli @ d5c06cb | 79 | 91.2% (2770/3037) | 3.6% | n/a | |
+| 2026-11-23 | Java | google/gson @ d9b5079 | 268 | 98.2% (11588/11797) | 2.1% | 8.5 s | network run; multi-module, test-heavy; precision 40/40 |
+| 2026-11-23 | Java | square/javapoet @ b9017a9 | 39 | 98.7% (4188/4244) | 9.0% | 2.8 s | precision 40/40 |
+| 2026-11-23 | Java | apache/commons-cli @ da2a34d | 87 | 97.8% (5768/5896) | 1.5% | 3.8 s | precision 40/40 |
+| 2026-11-23 | Java | jhy/jsoup @ d90d575 | 215 | 98.1% (22604/23046) | 3.3% | 12.7 s | |
+| 2026-11-23 | Java | google/guice @ 6816060 | 631 | 96.7% (21607/22340) | 6.0% | ~22 s | 10.8 s cold with 1 worker, 3.3 s with a warm cache |
+| 2026-11-23 | JavaScript | expressjs/express @ 43fca52 | 142 | 99.5% (394/396) | 0% | n/a | CommonJS; precision 40/40 |
+| 2026-11-23 | JavaScript | chalk/chalk @ 7211001 | 13 | 100% (49/49) | 0% | 1.1 s | ESM; 51.0% before the call-of-call-result fix |
+| 2026-11-23 | JavaScript | koajs/koa @ a0702b9 | 83 | 100% (793/793) | 0% | n/a | precision 40/40 |
+| 2026-11-23 | JavaScript | axios/axios @ 60d7296 | 254 JS + 31 TS | JS 99.5% (3281/3299), TS 97.7% (85/87) | 0% | 9.4 s | precision 40/40 |
+| 2026-11-23 | JavaScript | fastify/fastify @ eb08758 | 266 JS + 18 TS | JS 98.8% (1070/1083), TS 0/5 | 0% | 15.6 s | TS sample too small to mean anything |
+| 2026-11-23 | JavaScript | preactjs/preact @ 1fbc07f | 207 JS + 24 TS | JS 99.8% (3518/3524), TS 100% (53/53) | 0% | n/a | JSX |
+| 2026-11-23 | JavaScript | mochajs/mocha @ 04eb516 | 470 JS + 10 TS | JS 100% (1968/1968) | 0% | n/a | 3 files with parse errors |
+| 2026-11-23 | TypeScript | sindresorhus/ky @ 3541888 | 98 | 99.4% (1674/1684) | 0% | n/a | was 97.6% before the call-of-call-result fix |
+| 2026-11-23 | TypeScript | pmndrs/zustand @ 5d66d53 | 34 TS + 16 JS | TS 99.4% (712/716), JS 100% (25/25) | 0% | n/a | |

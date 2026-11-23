@@ -1,0 +1,298 @@
+{
+  "mustContainNodes": [
+    { "id": "file:test/user.test.js", "kind": "file", "meta": { "isTest": true } },
+    { "id": "sym:src/models/user.js#User", "kind": "class", "meta": { "isExported": true } },
+    { "id": "sym:src/models/user.js#User.constructor", "kind": "method" },
+    { "id": "sym:src/models/user.js#User.create", "kind": "method", "meta": { "isStatic": true } },
+    { "id": "sym:src/models/user.js#User.save", "kind": "method" },
+    { "id": "sym:src/models/admin.js#Admin", "kind": "class" },
+    { "id": "sym:src/models/admin.js#Admin.label", "kind": "method" },
+    { "id": "sym:src/lib/format.js#titleCase", "kind": "function", "meta": { "isExported": true } },
+    {
+      "id": "sym:src/lib/format.js#formatName",
+      "kind": "function",
+      "meta": { "isExported": true }
+    },
+    { "id": "sym:src/lib/format.js#shout", "kind": "function", "meta": { "isExported": true } },
+    { "id": "sym:src/lib/legacy.js#Counter", "kind": "function", "meta": { "isExported": true } },
+    {
+      "id": "sym:src/lib/legacy.js#Counter.inc",
+      "kind": "method",
+      "meta": { "js.isPrototypeMethod": true }
+    },
+    {
+      "id": "sym:src/lib/legacy.js#Counter.report",
+      "kind": "method",
+      "meta": { "js.isPrototypeMethod": true }
+    },
+    {
+      "id": "sym:src/lib/legacy.js#Counter.create",
+      "kind": "method",
+      "meta": { "isStatic": true }
+    },
+    { "id": "sym:src/esm/greeter.mjs#greet", "kind": "function" },
+    { "id": "sym:src/esm/greeter.mjs#Greeter", "kind": "class" },
+    { "id": "sym:src/esm/greeter.mjs#Greeter.say", "kind": "method" },
+    { "id": "sym:src/esm/main.js#run", "kind": "function" },
+    { "id": "sym:src/services/user-service.js#register", "kind": "function" },
+    { "id": "sym:src/services/user-service.js#promote", "kind": "function" },
+    { "id": "sym:src/cycle/a.js#ping", "kind": "function" },
+    { "id": "sym:src/cycle/b.js#pong", "kind": "function" },
+    { "id": "sym:src/ambiguous.js#Cat.speak", "kind": "method" },
+    { "id": "sym:src/ambiguous.js#Dog.speak", "kind": "method" },
+    { "id": "sym:src/broken.js#healthy", "kind": "function" },
+    { "id": "ext:npm:lodash", "kind": "external" },
+    { "id": "ext:node:builtins", "kind": "external" }
+  ],
+  "mustContainEdges": [
+    {
+      "src": "sym:src/models/user.js#User.describe",
+      "dst": "sym:src/models/user.js#User.displayName",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/user.js#User.create",
+      "dst": "sym:src/models/user.js#User.constructor",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/user.js#User.displayName",
+      "dst": "sym:src/lib/format.js#formatName",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+
+    {
+      "src": "sym:src/models/admin.js#Admin",
+      "dst": "sym:src/models/user.js#User",
+      "kind": "extends",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/admin.js#Admin.label",
+      "dst": "sym:src/models/user.js#User.displayName",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/admin.js#Admin.constructor",
+      "dst": "sym:src/models/user.js#User.constructor",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/models/admin.js#Admin.describe",
+      "dst": "sym:src/models/user.js#User.describe",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    { "src": "file:src/models/admin.js", "dst": "file:src/models/user.js", "kind": "imports" },
+
+    {
+      "src": "sym:src/services/user-service.js#promote",
+      "dst": "sym:src/lib/format.js#shout",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/esm/main.js#run",
+      "dst": "sym:src/esm/greeter.mjs#greet",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "file:src/services/user-service.js",
+      "dst": "file:src/lib/format.js",
+      "kind": "imports"
+    },
+    { "src": "file:src/esm/main.js", "dst": "file:src/esm/greeter.mjs", "kind": "imports" },
+
+    { "src": "file:src/index.js", "dst": "file:src/services/index.js", "kind": "imports" },
+    {
+      "src": "file:src/services/index.js",
+      "dst": "file:src/services/user-service.js",
+      "kind": "imports"
+    },
+    {
+      "src": "sym:src/index.js#start",
+      "dst": "sym:src/services/user-service.js#register",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    { "src": "file:src/esm/main.js", "dst": "file:src/lib/format.js", "kind": "imports" },
+    {
+      "src": "sym:src/esm/main.js#run",
+      "dst": "sym:src/lib/format.js#formatName",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+
+    { "src": "file:src/services/user-service.js", "dst": "ext:npm:lodash", "kind": "imports" },
+    { "src": "file:src/lib/format.js", "dst": "ext:node:builtins", "kind": "imports" },
+    { "src": "file:src/esm/main.js", "dst": "ext:node:builtins", "kind": "imports" },
+
+    {
+      "src": "sym:src/services/user-service.js#register",
+      "dst": "sym:src/models/user.js#User.create",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/index.js#start",
+      "dst": "sym:src/lib/legacy.js#Counter.create",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+
+    {
+      "src": "sym:src/services/user-service.js#register",
+      "dst": "sym:src/models/user.js#User.save",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/services/user-service.js#promote",
+      "dst": "sym:src/models/admin.js#Admin.constructor",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/services/user-service.js#promote",
+      "dst": "sym:src/models/admin.js#Admin.label",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/index.js#start",
+      "dst": "sym:src/lib/legacy.js#Counter.inc",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+
+    { "src": "file:src/cycle/a.js", "dst": "file:src/cycle/b.js", "kind": "imports" },
+    { "src": "file:src/cycle/b.js", "dst": "file:src/cycle/a.js", "kind": "imports" },
+    {
+      "src": "sym:src/cycle/a.js#ping",
+      "dst": "sym:src/cycle/b.js#pong",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/cycle/b.js#pong",
+      "dst": "sym:src/cycle/a.js#ping",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/index.js#start",
+      "dst": "sym:src/cycle/a.js#ping",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+
+    {
+      "src": "sym:src/ambiguous.js#chorus",
+      "dst": "sym:src/ambiguous.js#Cat.speak",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+    {
+      "src": "sym:src/ambiguous.js#chorus",
+      "dst": "sym:src/ambiguous.js#Dog.speak",
+      "kind": "calls",
+      "minConfidence": "inferred"
+    },
+
+    {
+      "src": "sym:src/lib/legacy.js#Counter.inc",
+      "dst": "sym:src/lib/legacy.js#Counter.report",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/lib/legacy.js#Counter.create",
+      "dst": "sym:src/lib/legacy.js#Counter",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/index.js#start",
+      "dst": "sym:src/lib/legacy.js#Counter",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    { "src": "file:src/index.js", "dst": "file:src/lib/legacy.js", "kind": "imports" },
+
+    {
+      "src": "sym:src/lib/format.js#formatName",
+      "dst": "sym:src/lib/format.js#titleCase",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+
+    {
+      "src": "sym:src/esm/greeter.mjs#Greeter.say",
+      "dst": "sym:src/esm/greeter.mjs#greet",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/esm/main.js#run",
+      "dst": "sym:src/esm/greeter.mjs#Greeter.constructor",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    {
+      "src": "sym:src/esm/main.js#run",
+      "dst": "sym:src/esm/greeter.mjs#Greeter.say",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+
+    {
+      "src": "file:test/user.test.js",
+      "dst": "sym:src/models/user.js#User.describe",
+      "kind": "calls",
+      "minConfidence": "exact"
+    },
+    { "src": "file:test/user.test.js", "dst": "file:src/models/user.js", "kind": "imports" }
+  ],
+  "mustNotContainEdges": [
+    {
+      "src": "sym:src/services/user-service.js#register",
+      "dst": "ext:npm:lodash",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/services/user-service.js#register",
+      "dst": "ext:npm:lodash",
+      "kind": "references"
+    },
+    { "src": "file:src/lib/format.js", "dst": "file:src/models/user.js", "kind": "imports" },
+    {
+      "src": "sym:src/lib/format.js#formatName",
+      "dst": "sym:src/lib/format.js#shout",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/models/user.js#User.create",
+      "dst": "sym:src/models/admin.js#Admin.constructor",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/services/user-service.js#promote",
+      "dst": "sym:src/models/user.js#User.create",
+      "kind": "calls"
+    },
+    {
+      "src": "sym:src/lib/legacy.js#Counter.report",
+      "dst": "sym:src/lib/legacy.js#Counter.inc",
+      "kind": "calls"
+    }
+  ],
+  "mustBeUnresolved": [],
+  "parseErrorFiles": ["src/broken.js"],
+  "minResolutionRate": 0.9
+}
