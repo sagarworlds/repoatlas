@@ -118,7 +118,7 @@ when deployed on IIS, including after an app pool recycle.
 - [x] Worker-thread pool for extraction (keep single-thread fallback for debugging).
 - [x] Per-file extraction cache by content hash.
 
-**Acceptance:** each language meets its TESTING §4 target on 2 real repos.
+**Acceptance:** each language meets its TESTING §4 target on 2 real repos. ✅ (lead re-run, D43)
 
 ---
 

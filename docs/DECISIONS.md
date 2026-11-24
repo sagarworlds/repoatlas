@@ -450,7 +450,7 @@ echo 98.5% (both embedding-heavy), plus cobra, chi, mux, logrus and urfave/cli. 
 jsoup and guice (96.7-98.7%). JavaScript: express, chalk, koa, axios, fastify, preact, mocha (98.8-100%). The hidden
 share of untyped-JS calls (parameters, `.d.ts`, globals) is not in the rate by definition (D37). A language with very
 few references (fastify TS: 0/5) triggers a CLI WARN that is not meaningful; a minimum-sample rule would be a CLI
-follow-up. The numbers come from the tuning agents; the lead re-runs the acceptance before M4 is ticked.
+follow-up. The numbers come from the tuning agents. The lead re-ran the acceptance on repos the agents never saw (2026-11-24, `--no-cache`): Go golang/mock 94.4%, tidwall/gjson 100%; Java junit4 98.1%, jackson-core 98.4%; JavaScript lodash 99.8%, got (TS) 99.6%; name-match 0.0-9.1%; 0 dropped edges, 0 plugin errors.
 
 ---
 
